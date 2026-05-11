@@ -18,6 +18,19 @@ return Application::configure(basePath: dirname(__DIR__))
 
         //
     })
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->alias([
+            'active' => \App\Http\Middleware\CheckUserIsActive::class,
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+        ]);
+     
+        // Aplicar el check de usuario activo a todas las rutas web autenticadas
+        $middleware->appendToGroup('web', [
+            \App\Http\Middleware\CheckUserIsActive::class,
+        ]);
+    })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
