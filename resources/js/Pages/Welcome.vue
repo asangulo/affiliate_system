@@ -1,386 +1,1284 @@
 <script setup>
+import { ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 
 defineProps({
-    canLogin: {
-        type: Boolean,
-    },
-    canRegister: {
-        type: Boolean,
-    },
-    laravelVersion: {
-        type: String,
-        required: true,
-    },
-    phpVersion: {
-        type: String,
-        required: true,
-    },
+    canLogin: { type: Boolean },
+    canRegister: { type: Boolean },
 });
 
-function handleImageError() {
-    document.getElementById('screenshot-container')?.classList.add('!hidden');
-    document.getElementById('docs-card')?.classList.add('!row-span-1');
-    document.getElementById('docs-card-content')?.classList.add('!flex-row');
-    document.getElementById('background')?.classList.add('!hidden');
-}
+const menuOpen = ref(false);
+
+const planes = [
+    {
+        name: 'Plan Esencial',
+        precio: '$25.000',
+        periodo: '/mes',
+        color: 'plan--sky',
+        descripcion: 'Protección básica con dignidad para tu familia.',
+        beneficios: [
+            'Servicio funerario completo',
+            'Traslado local incluido',
+            'Asesoría 24/7',
+            'Hasta 2 beneficiarios',
+        ],
+        destacado: false,
+    },
+    {
+        name: 'Plan Familiar',
+        precio: '$45.000',
+        periodo: '/mes',
+        color: 'plan--green',
+        descripcion: 'La opción más elegida por las familias colombianas.',
+        beneficios: [
+            'Todo lo del Plan Esencial',
+            'Traslado nacional incluido',
+            'Sala de velación premium',
+            'Hasta 5 beneficiarios',
+            'Asesoría jurídica básica',
+        ],
+        destacado: true,
+    },
+    {
+        name: 'Plan Integral',
+        precio: '$75.000',
+        periodo: '/mes',
+        color: 'plan--gold',
+        descripcion: 'Cobertura total y tranquilidad para toda tu familia.',
+        beneficios: [
+            'Todo lo del Plan Familiar',
+            'Traslado internacional',
+            'Sala VIP de velación',
+            'Beneficiarios ilimitados',
+            'Asesoría jurídica completa',
+            'Servicio de repatriación',
+        ],
+        destacado: false,
+    },
+];
+
+const valores = [
+    { icon: '🕊️', titulo: 'Dignidad', desc: 'Cada servicio se presta con el más alto respeto y dignidad hacia nuestros afiliados y sus familias.' },
+    { icon: '🤝', titulo: 'Compromiso', desc: 'Más de 20 años acompañando a las familias del Huila en los momentos más difíciles.' },
+    { icon: '❤️', titulo: 'Calidez', desc: 'Un equipo humano dedicado a ofrecer consuelo, apoyo y orientación en cada momento.' },
+    { icon: '⭐', titulo: 'Calidad', desc: 'Instalaciones modernas y personal altamente capacitado para brindarte el mejor servicio.' },
+];
 </script>
 
 <template>
-    <Head title="Welcome" />
-    <div class="bg-gray-50 text-black/50 dark:bg-black dark:text-white/50">
-        <img
-            id="background"
-            class="absolute -left-20 top-0 max-w-[877px]"
-            src="https://laravel.com/assets/img/welcome/background.svg"
-        />
-        <div
-            class="relative flex min-h-screen flex-col items-center justify-center selection:bg-[#FF2D20] selection:text-white"
-        >
-            <div class="relative w-full max-w-2xl px-6 lg:max-w-7xl">
-                <header
-                    class="grid grid-cols-2 items-center gap-2 py-10 lg:grid-cols-3"
-                >
-                    <div class="flex lg:col-start-2 lg:justify-center">
-                        <svg
-                            class="h-12 w-auto text-white lg:h-16 lg:text-[#FF2D20]"
-                            viewBox="0 0 62 65"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                d="M61.8548 14.6253C61.8778 14.7102 61.8895 14.7978 61.8897 14.8858V28.5615C61.8898 28.737 61.8434 28.9095 61.7554 29.0614C61.6675 29.2132 61.5409 29.3392 61.3887 29.4265L49.9104 36.0351V49.1337C49.9104 49.4902 49.7209 49.8192 49.4118 49.9987L25.4519 63.7916C25.3971 63.8227 25.3372 63.8427 25.2774 63.8639C25.255 63.8714 25.2338 63.8851 25.2101 63.8913C25.0426 63.9354 24.8666 63.9354 24.6991 63.8913C24.6716 63.8838 24.6467 63.8689 24.6205 63.8589C24.5657 63.8389 24.5084 63.8215 24.456 63.7916L0.501061 49.9987C0.348882 49.9113 0.222437 49.7853 0.134469 49.6334C0.0465019 49.4816 0.000120578 49.3092 0 49.1337L0 8.10652C0 8.01678 0.0124642 7.92953 0.0348998 7.84477C0.0423783 7.8161 0.0598282 7.78993 0.0697995 7.76126C0.0884958 7.70891 0.105946 7.65531 0.133367 7.6067C0.152063 7.5743 0.179485 7.54812 0.20192 7.51821C0.230588 7.47832 0.256763 7.43719 0.290416 7.40229C0.319084 7.37362 0.356476 7.35243 0.388883 7.32751C0.425029 7.29759 0.457436 7.26518 0.498568 7.2415L12.4779 0.345059C12.6296 0.257786 12.8015 0.211853 12.9765 0.211853C13.1515 0.211853 13.3234 0.257786 13.475 0.345059L25.4531 7.2415H25.4556C25.4955 7.26643 25.5292 7.29759 25.5653 7.32626C25.5977 7.35119 25.6339 7.37362 25.6625 7.40104C25.6974 7.43719 25.7224 7.47832 25.7523 7.51821C25.7735 7.54812 25.8021 7.5743 25.8196 7.6067C25.8483 7.65656 25.8645 7.70891 25.8844 7.76126C25.8944 7.78993 25.9118 7.8161 25.9193 7.84602C25.9423 7.93096 25.954 8.01853 25.9542 8.10652V33.7317L35.9355 27.9844V14.8846C35.9355 14.7973 35.948 14.7088 35.9704 14.6253C35.9792 14.5954 35.9954 14.5692 36.0053 14.5405C36.0253 14.4882 36.0427 14.4346 36.0702 14.386C36.0888 14.3536 36.1163 14.3274 36.1375 14.2975C36.1674 14.2576 36.1923 14.2165 36.2272 14.1816C36.2559 14.1529 36.292 14.1317 36.3244 14.1068C36.3618 14.0769 36.3942 14.0445 36.4341 14.0208L48.4147 7.12434C48.5663 7.03694 48.7383 6.99094 48.9133 6.99094C49.0883 6.99094 49.2602 7.03694 49.4118 7.12434L61.3899 14.0208C61.4323 14.0457 61.4647 14.0769 61.5021 14.1055C61.5333 14.1305 61.5694 14.1529 61.5981 14.1803C61.633 14.2165 61.6579 14.2576 61.6878 14.2975C61.7103 14.3274 61.7377 14.3536 61.7551 14.386C61.7838 14.4346 61.8 14.4882 61.8199 14.5405C61.8312 14.5692 61.8474 14.5954 61.8548 14.6253ZM59.893 27.9844V16.6121L55.7013 19.0252L49.9104 22.3593V33.7317L59.8942 27.9844H59.893ZM47.9149 48.5566V37.1768L42.2187 40.4299L25.953 49.7133V61.2003L47.9149 48.5566ZM1.99677 9.83281V48.5566L23.9562 61.199V49.7145L12.4841 43.2219L12.4804 43.2194L12.4754 43.2169C12.4368 43.1945 12.4044 43.1621 12.3682 43.1347C12.3371 43.1097 12.3009 43.0898 12.2735 43.0624L12.271 43.0586C12.2386 43.0275 12.2162 42.9888 12.1887 42.9539C12.1638 42.9203 12.1339 42.8916 12.114 42.8567L12.1127 42.853C12.0903 42.8156 12.0766 42.7707 12.0604 42.7283C12.0442 42.6909 12.023 42.656 12.013 42.6161C12.0005 42.5688 11.998 42.5177 11.9931 42.4691C11.9881 42.4317 11.9781 42.3943 11.9781 42.3569V15.5801L6.18848 12.2446L1.99677 9.83281ZM12.9777 2.36177L2.99764 8.10652L12.9752 13.8513L22.9541 8.10527L12.9752 2.36177H12.9777ZM18.1678 38.2138L23.9574 34.8809V9.83281L19.7657 12.2459L13.9749 15.5801V40.6281L18.1678 38.2138ZM48.9133 9.14105L38.9344 14.8858L48.9133 20.6305L58.8909 14.8846L48.9133 9.14105ZM47.9149 22.3593L42.124 19.0252L37.9323 16.6121V27.9844L43.7219 31.3174L47.9149 33.7317V22.3593ZM24.9533 47.987L39.59 39.631L46.9065 35.4555L36.9352 29.7145L25.4544 36.3242L14.9907 42.3482L24.9533 47.987Z"
-                                fill="currentColor"
-                            />
+    <Head title="Horizonte S.A.S Pre Exequiales — Planes de Afiliación" />
+
+    <div class="lp">
+
+        <!-- ════════════ NAVBAR ════════════ -->
+        <nav class="lp-nav">
+            <div class="lp-nav__inner">
+                <!-- Logo -->
+                <div class="lp-nav__brand">
+                    <svg viewBox="0 0 56 56" fill="none" class="lp-nav__svg">
+                        <circle cx="28" cy="18" r="9" fill="#F5C518"/>
+                        <g stroke="#F5C518" stroke-width="2.2" stroke-linecap="round">
+                            <line x1="28" y1="3"  x2="28" y2="7.5"/>
+                            <line x1="43" y1="9"  x2="40" y2="12"/>
+                            <line x1="48" y1="18" x2="43.5" y2="18"/>
+                            <line x1="13" y1="9"  x2="16" y2="12"/>
+                            <line x1="8"  y1="18" x2="12.5" y2="18"/>
+                        </g>
+                        <ellipse cx="14" cy="42" rx="18" ry="11" fill="#1a6b2a"/>
+                        <ellipse cx="42" cy="44" rx="18" ry="10" fill="#228b35"/>
+                        <ellipse cx="28" cy="49" rx="29" ry="10" fill="#2eaa45"/>
+                    </svg>
+                    <div class="lp-nav__text">
+                        <span class="lp-nav__name">HORIZONTE</span>
+                        <span class="lp-nav__sub">Pre Exequiales</span>
+                    </div>
+                </div>
+
+                <!-- Links desktop -->
+                <div class="lp-nav__links">
+                    <a href="#nosotros" class="lp-nav__a">Nosotros</a>
+                    <a href="#planes" class="lp-nav__a">Planes</a>
+                    <a href="#valores" class="lp-nav__a">Valores</a>
+                    <a href="#contacto" class="lp-nav__a">Contacto</a>
+                </div>
+
+                <!-- CTA -->
+                <div class="lp-nav__cta">
+                    <Link v-if="canLogin" :href="route('login')" class="lp-btn lp-btn--ghost">Iniciar sesión</Link>
+                    <Link v-if="canRegister" :href="route('register')" class="lp-btn lp-btn--solid">Afiliarme</Link>
+                </div>
+
+                <!-- Burger -->
+                <button class="lp-nav__burger" @click="menuOpen = !menuOpen">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                        <path v-if="!menuOpen" d="M4 6h16M4 12h16M4 18h16"/>
+                        <path v-else d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile menu -->
+            <div class="lp-mobile-menu" :class="{ 'lp-mobile-menu--open': menuOpen }">
+                <a href="#nosotros" class="lp-mobile-menu__a" @click="menuOpen=false">Nosotros</a>
+                <a href="#planes" class="lp-mobile-menu__a" @click="menuOpen=false">Planes</a>
+                <a href="#valores" class="lp-mobile-menu__a" @click="menuOpen=false">Valores</a>
+                <a href="#contacto" class="lp-mobile-menu__a" @click="menuOpen=false">Contacto</a>
+                <div class="lp-mobile-menu__cta">
+                    <Link v-if="canLogin" :href="route('login')" class="lp-btn lp-btn--ghost">Iniciar sesión</Link>
+                    <Link v-if="canRegister" :href="route('register')" class="lp-btn lp-btn--solid">Afiliarme</Link>
+                </div>
+            </div>
+        </nav>
+
+        <!-- ════════════ HERO ════════════ -->
+        <section class="lp-hero">
+            <!-- Fondo animado -->
+            <div class="lp-hero__bg">
+                <div class="lp-hero__sky"></div>
+                <div class="lp-hero__sun-wrap">
+                    <div class="lp-hero__sun">
+                        <div class="lp-hero__rays"></div>
+                    </div>
+                </div>
+                <div class="lp-hero__hills">
+                    <div class="lp-hero__hill lp-hero__hill--1"></div>
+                    <div class="lp-hero__hill lp-hero__hill--2"></div>
+                    <div class="lp-hero__hill lp-hero__hill--3"></div>
+                </div>
+            </div>
+
+            <!-- Contenido hero -->
+            <div class="lp-hero__content">
+                <span class="lp-hero__badge">20 años de confianza</span>
+                <h1 class="lp-hero__h1">
+                    Protege a tu familia<br>
+                    <span class="lp-hero__h1--accent">con dignidad y amor</span>
+                </h1>
+                <p class="lp-hero__p">
+                    Somos Horizonte S.A.S Pre Exequiales. Te acompañamos en los momentos más difíciles,
+                    ofreciendo planes de afiliación accesibles para que tu familia siempre esté protegida.
+                </p>
+                <div class="lp-hero__btns">
+                    <Link v-if="canRegister" :href="route('register')" class="lp-btn lp-btn--hero-primary">
+                        Ver planes de afiliación
+                    </Link>
+                    <a href="#nosotros" class="lp-btn lp-btn--hero-ghost">Conocer más</a>
+                </div>
+
+                <!-- Estadísticas -->
+                <div class="lp-hero__stats">
+                    <div class="lp-hero__stat">
+                        <span class="lp-hero__stat-n">+15.000</span>
+                        <span class="lp-hero__stat-l">Familias afiliadas</span>
+                    </div>
+                    <div class="lp-hero__stat-sep"></div>
+                    <div class="lp-hero__stat">
+                        <span class="lp-hero__stat-n">20 años</span>
+                        <span class="lp-hero__stat-l">De experiencia</span>
+                    </div>
+                    <div class="lp-hero__stat-sep"></div>
+                    <div class="lp-hero__stat">
+                        <span class="lp-hero__stat-n">24/7</span>
+                        <span class="lp-hero__stat-l">Atención disponible</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════ NOSOTROS ════════════ -->
+        <section class="lp-section lp-about" id="nosotros">
+            <div class="lp-container lp-about__grid">
+                <div class="lp-about__visual">
+                    <div class="lp-about__emblem">
+                        <svg viewBox="0 0 160 160" fill="none">
+                            <circle cx="80" cy="80" r="75" fill="url(#bgCircle)" opacity="0.15"/>
+                            <defs>
+                                <radialGradient id="bgCircle" cx="50%" cy="50%" r="50%">
+                                    <stop offset="0%" stop-color="#2eaa45"/>
+                                    <stop offset="100%" stop-color="#0a3d6b"/>
+                                </radialGradient>
+                            </defs>
+                            <!-- Sol grande -->
+                            <circle cx="80" cy="55" r="22" fill="#F5C518"/>
+                            <g stroke="#F5C518" stroke-width="3" stroke-linecap="round">
+                                <line x1="80" y1="18" x2="80" y2="26"/>
+                                <line x1="110" y1="28" x2="104" y2="34"/>
+                                <line x1="118" y1="55" x2="110" y2="55"/>
+                                <line x1="50"  y1="28" x2="56"  y2="34"/>
+                                <line x1="42"  y1="55" x2="50"  y2="55"/>
+                                <line x1="108" y1="80" x2="103" y2="76"/>
+                                <line x1="52"  y1="80" x2="57"  y2="76"/>
+                            </g>
+                            <!-- Colinas -->
+                            <ellipse cx="40"  cy="120" rx="55" ry="35" fill="#155824"/>
+                            <ellipse cx="120" cy="126" rx="55" ry="32" fill="#1e7f33"/>
+                            <ellipse cx="80"  cy="135" rx="85" ry="30" fill="#27a83e"/>
+                            <!-- Texto -->
+                            <text x="80" y="154" text-anchor="middle" font-family="serif" font-size="9" fill="#fff" opacity="0.7">HORIZONTE S.A.S</text>
                         </svg>
                     </div>
-                    <nav v-if="canLogin" class="-mx-3 flex flex-1 justify-end">
-                        <Link
-                            v-if="$page.props.auth.user"
-                            :href="route('dashboard')"
-                            class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                        >
-                            Dashboard
+                    <div class="lp-about__badge-float">
+                        <span class="lp-about__badge-n">+20</span>
+                        <span class="lp-about__badge-l">años</span>
+                    </div>
+                </div>
+
+                <div class="lp-about__body">
+                    <span class="lp-label">¿Quiénes somos?</span>
+                    <h2 class="lp-h2">Acompañándote con <em>amor</em> desde hace más de dos décadas</h2>
+                    <p class="lp-p">
+                        Horizonte S.A.S Pre Exequiales nació con una misión clara: brindar a las familias colombianas
+                        un servicio funerario de alta calidad, accesible y lleno de calidez humana. Sabemos que los
+                        momentos de pérdida son los más difíciles, y por eso estamos aquí para ayudarte a cada paso.
+                    </p>
+                    <p class="lp-p">
+                        Con instalaciones modernas, personal especializado y planes de afiliación flexibles, te
+                        garantizamos que tu familia tendrá la protección y el apoyo que merece.
+                    </p>
+                    <div class="lp-about__chips">
+                        <span class="lp-chip lp-chip--blue">Servicio 24/7</span>
+                        <span class="lp-chip lp-chip--green">Traslados nacionales</span>
+                        <span class="lp-chip lp-chip--gold">Salas premium</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════ PLANES ════════════ -->
+        <section class="lp-section lp-planes" id="planes">
+            <div class="lp-container">
+                <div class="lp-section-header">
+                    <span class="lp-label">Nuestros planes</span>
+                    <h2 class="lp-h2">Elige el plan que mejor<br>se adapte a tu familia</h2>
+                    <p class="lp-p lp-p--center">Todos nuestros planes incluyen atención personalizada y acompañamiento profesional.</p>
+                </div>
+
+                <div class="lp-planes__grid">
+                    <div
+                        v-for="plan in planes"
+                        :key="plan.name"
+                        class="lp-plan"
+                        :class="[plan.color, { 'lp-plan--star': plan.destacado }]"
+                    >
+                        <div v-if="plan.destacado" class="lp-plan__badge">⭐ Más popular</div>
+                        <div class="lp-plan__header">
+                            <h3 class="lp-plan__name">{{ plan.name }}</h3>
+                            <div class="lp-plan__price">
+                                <span class="lp-plan__amount">{{ plan.precio }}</span>
+                                <span class="lp-plan__period">{{ plan.periodo }}</span>
+                            </div>
+                            <p class="lp-plan__desc">{{ plan.descripcion }}</p>
+                        </div>
+                        <ul class="lp-plan__list">
+                            <li v-for="b in plan.beneficios" :key="b" class="lp-plan__item">
+                                <svg viewBox="0 0 20 20" fill="currentColor" class="lp-plan__check">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                {{ b }}
+                            </li>
+                        </ul>
+                        <Link :href="canRegister ? route('register') : route('login')" class="lp-plan__cta">
+                            Quiero este plan
                         </Link>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-                        <template v-else>
-                            <Link
-                                :href="route('login')"
-                                class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                            >
-                                Log in
-                            </Link>
+        <!-- ════════════ VALORES ════════════ -->
+        <section class="lp-section lp-valores" id="valores">
+            <div class="lp-container">
+                <div class="lp-section-header">
+                    <span class="lp-label lp-label--light">Nuestros valores</span>
+                    <h2 class="lp-h2 lp-h2--light">Lo que nos define</h2>
+                </div>
+                <div class="lp-valores__grid">
+                    <div v-for="v in valores" :key="v.titulo" class="lp-valor">
+                        <div class="lp-valor__icon">{{ v.icon }}</div>
+                        <h3 class="lp-valor__title">{{ v.titulo }}</h3>
+                        <p class="lp-valor__desc">{{ v.desc }}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-                            <Link
-                                v-if="canRegister"
-                                :href="route('register')"
-                                class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                            >
-                                Register
-                            </Link>
-                        </template>
-                    </nav>
-                </header>
+        <!-- ════════════ CTA FINAL ════════════ -->
+        <section class="lp-cta-final">
+            <div class="lp-cta-final__bg">
+                <div class="lp-cta-final__hill lp-cta-final__hill--1"></div>
+                <div class="lp-cta-final__hill lp-cta-final__hill--2"></div>
+            </div>
+            <div class="lp-container lp-cta-final__content">
+                <h2 class="lp-cta-final__h2">¿Listo para proteger<br>a tu familia hoy?</h2>
+                <p class="lp-cta-final__p">Únete a más de 15.000 familias que ya confían en Horizonte S.A.S.</p>
+                <div class="lp-cta-final__btns">
+                    <Link v-if="canRegister" :href="route('register')" class="lp-btn lp-btn--white">
+                        Afiliarme ahora
+                    </Link>
+                    <a href="#contacto" class="lp-btn lp-btn--outline-white">Más información</a>
+                </div>
+            </div>
+        </section>
 
-                <main class="mt-6">
-                    <div class="grid gap-6 lg:grid-cols-2 lg:gap-8">
-                        <a
-                            href="https://laravel.com/docs"
-                            id="docs-card"
-                            class="flex flex-col items-start gap-6 overflow-hidden rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] transition duration-300 hover:text-black/70 hover:ring-black/20 focus:outline-none focus-visible:ring-[#FF2D20] md:row-span-3 lg:p-10 lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:text-white/70 dark:hover:ring-zinc-700 dark:focus-visible:ring-[#FF2D20]"
-                        >
-                            <div
-                                id="screenshot-container"
-                                class="relative flex w-full flex-1 items-stretch"
-                            >
-                                <img
-                                    src="https://laravel.com/assets/img/welcome/docs-light.svg"
-                                    alt="Laravel documentation screenshot"
-                                    class="aspect-video h-full w-full flex-1 rounded-[10px] object-cover object-top drop-shadow-[0px_4px_34px_rgba(0,0,0,0.06)] dark:hidden"
-                                    @error="handleImageError"
-                                />
-                                <img
-                                    src="https://laravel.com/assets/img/welcome/docs-dark.svg"
-                                    alt="Laravel documentation screenshot"
-                                    class="hidden aspect-video h-full w-full flex-1 rounded-[10px] object-cover object-top drop-shadow-[0px_4px_34px_rgba(0,0,0,0.25)] dark:block"
-                                />
-                                <div
-                                    class="absolute -bottom-16 -left-16 h-40 w-[calc(100%+8rem)] bg-gradient-to-b from-transparent via-white to-white dark:via-zinc-900 dark:to-zinc-900"
-                                ></div>
+        <!-- ════════════ CONTACTO ════════════ -->
+        <section class="lp-section lp-contacto" id="contacto">
+            <div class="lp-container lp-contacto__grid">
+                <div class="lp-contacto__info">
+                    <span class="lp-label">Contáctanos</span>
+                    <h2 class="lp-h2">Estamos aquí para ayudarte</h2>
+                    <div class="lp-contacto__items">
+                        <div class="lp-contacto__item">
+                            <div class="lp-contacto__ico">📞</div>
+                            <div>
+                                <p class="lp-contacto__item-title">Teléfono</p>
+                                <p class="lp-contacto__item-val">+57 (8) 000-0000</p>
                             </div>
-
-                            <div
-                                class="relative flex items-center gap-6 lg:items-end"
-                            >
-                                <div
-                                    id="docs-card-content"
-                                    class="flex items-start gap-6 lg:flex-col"
-                                >
-                                    <div
-                                        class="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FF2D20]/10 sm:size-16"
-                                    >
-                                        <svg
-                                            class="size-5 sm:size-6"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                fill="#FF2D20"
-                                                d="M23 4a1 1 0 0 0-1.447-.894L12.224 7.77a.5.5 0 0 1-.448 0L2.447 3.106A1 1 0 0 0 1 4v13.382a1.99 1.99 0 0 0 1.105 1.79l9.448 4.728c.14.065.293.1.447.1.154-.005.306-.04.447-.105l9.453-4.724a1.99 1.99 0 0 0 1.1-1.789V4ZM3 6.023a.25.25 0 0 1 .362-.223l7.5 3.75a.251.251 0 0 1 .138.223v11.2a.25.25 0 0 1-.362.224l-7.5-3.75a.25.25 0 0 1-.138-.22V6.023Zm18 11.2a.25.25 0 0 1-.138.224l-7.5 3.75a.249.249 0 0 1-.329-.099.249.249 0 0 1-.033-.12V9.772a.251.251 0 0 1 .138-.224l7.5-3.75a.25.25 0 0 1 .362.224v11.2Z"
-                                            />
-                                            <path
-                                                fill="#FF2D20"
-                                                d="m3.55 1.893 8 4.048a1.008 1.008 0 0 0 .9 0l8-4.048a1 1 0 0 0-.9-1.785l-7.322 3.706a.506.506 0 0 1-.452 0L4.454.108a1 1 0 0 0-.9 1.785H3.55Z"
-                                            />
-                                        </svg>
-                                    </div>
-
-                                    <div class="pt-3 sm:pt-5 lg:pt-0">
-                                        <h2
-                                            class="text-xl font-semibold text-black dark:text-white"
-                                        >
-                                            Documentation
-                                        </h2>
-
-                                        <p class="mt-4 text-sm/relaxed">
-                                            Laravel has wonderful documentation
-                                            covering every aspect of the
-                                            framework. Whether you are a
-                                            newcomer or have prior experience
-                                            with Laravel, we recommend reading
-                                            our documentation from beginning to
-                                            end.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <svg
-                                    class="size-6 shrink-0 stroke-[#FF2D20]"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke-width="1.5"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
-                                    />
-                                </svg>
+                        </div>
+                        <div class="lp-contacto__item">
+                            <div class="lp-contacto__ico">📧</div>
+                            <div>
+                                <p class="lp-contacto__item-title">Correo</p>
+                                <p class="lp-contacto__item-val">info@horizonte.com.co</p>
                             </div>
-                        </a>
-
-                        <a
-                            href="https://laracasts.com"
-                            class="flex items-start gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] transition duration-300 hover:text-black/70 hover:ring-black/20 focus:outline-none focus-visible:ring-[#FF2D20] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:text-white/70 dark:hover:ring-zinc-700 dark:focus-visible:ring-[#FF2D20]"
-                        >
-                            <div
-                                class="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FF2D20]/10 sm:size-16"
-                            >
-                                <svg
-                                    class="size-5 sm:size-6"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <g fill="#FF2D20">
-                                        <path
-                                            d="M24 8.25a.5.5 0 0 0-.5-.5H.5a.5.5 0 0 0-.5.5v12a2.5 2.5 0 0 0 2.5 2.5h19a2.5 2.5 0 0 0 2.5-2.5v-12Zm-7.765 5.868a1.221 1.221 0 0 1 0 2.264l-6.626 2.776A1.153 1.153 0 0 1 8 18.123v-5.746a1.151 1.151 0 0 1 1.609-1.035l6.626 2.776ZM19.564 1.677a.25.25 0 0 0-.177-.427H15.6a.106.106 0 0 0-.072.03l-4.54 4.543a.25.25 0 0 0 .177.427h3.783c.027 0 .054-.01.073-.03l4.543-4.543ZM22.071 1.318a.047.047 0 0 0-.045.013l-4.492 4.492a.249.249 0 0 0 .038.385.25.25 0 0 0 .14.042h5.784a.5.5 0 0 0 .5-.5v-2a2.5 2.5 0 0 0-1.925-2.432ZM13.014 1.677a.25.25 0 0 0-.178-.427H9.101a.106.106 0 0 0-.073.03l-4.54 4.543a.25.25 0 0 0 .177.427H8.4a.106.106 0 0 0 .073-.03l4.54-4.543ZM6.513 1.677a.25.25 0 0 0-.177-.427H2.5A2.5 2.5 0 0 0 0 3.75v2a.5.5 0 0 0 .5.5h1.4a.106.106 0 0 0 .073-.03l4.54-4.543Z"
-                                        />
-                                    </g>
-                                </svg>
+                        </div>
+                        <div class="lp-contacto__item">
+                            <div class="lp-contacto__ico">📍</div>
+                            <div>
+                                <p class="lp-contacto__item-title">Dirección</p>
+                                <p class="lp-contacto__item-val">Neiva, Huila, Colombia</p>
                             </div>
-
-                            <div class="pt-3 sm:pt-5">
-                                <h2
-                                    class="text-xl font-semibold text-black dark:text-white"
-                                >
-                                    Laracasts
-                                </h2>
-
-                                <p class="mt-4 text-sm/relaxed">
-                                    Laracasts offers thousands of video
-                                    tutorials on Laravel, PHP, and JavaScript
-                                    development. Check them out, see for
-                                    yourself, and massively level up your
-                                    development skills in the process.
-                                </p>
-                            </div>
-
-                            <svg
-                                class="size-6 shrink-0 self-center stroke-[#FF2D20]"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
-                                />
-                            </svg>
-                        </a>
-
-                        <a
-                            href="https://laravel-news.com"
-                            class="flex items-start gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] transition duration-300 hover:text-black/70 hover:ring-black/20 focus:outline-none focus-visible:ring-[#FF2D20] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:text-white/70 dark:hover:ring-zinc-700 dark:focus-visible:ring-[#FF2D20]"
-                        >
-                            <div
-                                class="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FF2D20]/10 sm:size-16"
-                            >
-                                <svg
-                                    class="size-5 sm:size-6"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <g fill="#FF2D20">
-                                        <path
-                                            d="M8.75 4.5H5.5c-.69 0-1.25.56-1.25 1.25v4.75c0 .69.56 1.25 1.25 1.25h3.25c.69 0 1.25-.56 1.25-1.25V5.75c0-.69-.56-1.25-1.25-1.25Z"
-                                        />
-                                        <path
-                                            d="M24 10a3 3 0 0 0-3-3h-2V2.5a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2V20a3.5 3.5 0 0 0 3.5 3.5h17A3.5 3.5 0 0 0 24 20V10ZM3.5 21.5A1.5 1.5 0 0 1 2 20V3a.5.5 0 0 1 .5-.5h14a.5.5 0 0 1 .5.5v17c0 .295.037.588.11.874a.5.5 0 0 1-.484.625L3.5 21.5ZM22 20a1.5 1.5 0 1 1-3 0V9.5a.5.5 0 0 1 .5-.5H21a1 1 0 0 1 1 1v10Z"
-                                        />
-                                        <path
-                                            d="M12.751 6.047h2a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-.75.75h-2A.75.75 0 0 1 12 7.3v-.5a.75.75 0 0 1 .751-.753ZM12.751 10.047h2a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-.75.75h-2A.75.75 0 0 1 12 11.3v-.5a.75.75 0 0 1 .751-.753ZM4.751 14.047h10a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-.75.75h-10A.75.75 0 0 1 4 15.3v-.5a.75.75 0 0 1 .751-.753ZM4.75 18.047h7.5a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-.75.75h-7.5A.75.75 0 0 1 4 19.3v-.5a.75.75 0 0 1 .75-.753Z"
-                                        />
-                                    </g>
-                                </svg>
-                            </div>
-
-                            <div class="pt-3 sm:pt-5">
-                                <h2
-                                    class="text-xl font-semibold text-black dark:text-white"
-                                >
-                                    Laravel News
-                                </h2>
-
-                                <p class="mt-4 text-sm/relaxed">
-                                    Laravel News is a community driven portal
-                                    and newsletter aggregating all of the latest
-                                    and most important news in the Laravel
-                                    ecosystem, including new package releases
-                                    and tutorials.
-                                </p>
-                            </div>
-
-                            <svg
-                                class="size-6 shrink-0 self-center stroke-[#FF2D20]"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
-                                />
-                            </svg>
-                        </a>
-
-                        <div
-                            class="flex items-start gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800"
-                        >
-                            <div
-                                class="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FF2D20]/10 sm:size-16"
-                            >
-                                <svg
-                                    class="size-5 sm:size-6"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <g fill="#FF2D20">
-                                        <path
-                                            d="M16.597 12.635a.247.247 0 0 0-.08-.237 2.234 2.234 0 0 1-.769-1.68c.001-.195.03-.39.084-.578a.25.25 0 0 0-.09-.267 8.8 8.8 0 0 0-4.826-1.66.25.25 0 0 0-.268.181 2.5 2.5 0 0 1-2.4 1.824.045.045 0 0 0-.045.037 12.255 12.255 0 0 0-.093 3.86.251.251 0 0 0 .208.214c2.22.366 4.367 1.08 6.362 2.118a.252.252 0 0 0 .32-.079 10.09 10.09 0 0 0 1.597-3.733ZM13.616 17.968a.25.25 0 0 0-.063-.407A19.697 19.697 0 0 0 8.91 15.98a.25.25 0 0 0-.287.325c.151.455.334.898.548 1.328.437.827.981 1.594 1.619 2.28a.249.249 0 0 0 .32.044 29.13 29.13 0 0 0 2.506-1.99ZM6.303 14.105a.25.25 0 0 0 .265-.274 13.048 13.048 0 0 1 .205-4.045.062.062 0 0 0-.022-.07 2.5 2.5 0 0 1-.777-.982.25.25 0 0 0-.271-.149 11 11 0 0 0-5.6 2.815.255.255 0 0 0-.075.163c-.008.135-.02.27-.02.406.002.8.084 1.598.246 2.381a.25.25 0 0 0 .303.193 19.924 19.924 0 0 1 5.746-.438ZM9.228 20.914a.25.25 0 0 0 .1-.393 11.53 11.53 0 0 1-1.5-2.22 12.238 12.238 0 0 1-.91-2.465.248.248 0 0 0-.22-.187 18.876 18.876 0 0 0-5.69.33.249.249 0 0 0-.179.336c.838 2.142 2.272 4 4.132 5.353a.254.254 0 0 0 .15.048c1.41-.01 2.807-.282 4.117-.802ZM18.93 12.957l-.005-.008a.25.25 0 0 0-.268-.082 2.21 2.21 0 0 1-.41.081.25.25 0 0 0-.217.2c-.582 2.66-2.127 5.35-5.75 7.843a.248.248 0 0 0-.09.299.25.25 0 0 0 .065.091 28.703 28.703 0 0 0 2.662 2.12.246.246 0 0 0 .209.037c2.579-.701 4.85-2.242 6.456-4.378a.25.25 0 0 0 .048-.189 13.51 13.51 0 0 0-2.7-6.014ZM5.702 7.058a.254.254 0 0 0 .2-.165A2.488 2.488 0 0 1 7.98 5.245a.093.093 0 0 0 .078-.062 19.734 19.734 0 0 1 3.055-4.74.25.25 0 0 0-.21-.41 12.009 12.009 0 0 0-10.4 8.558.25.25 0 0 0 .373.281 12.912 12.912 0 0 1 4.826-1.814ZM10.773 22.052a.25.25 0 0 0-.28-.046c-.758.356-1.55.635-2.365.833a.25.25 0 0 0-.022.48c1.252.43 2.568.65 3.893.65.1 0 .2 0 .3-.008a.25.25 0 0 0 .147-.444c-.526-.424-1.1-.917-1.673-1.465ZM18.744 8.436a.249.249 0 0 0 .15.228 2.246 2.246 0 0 1 1.352 2.054c0 .337-.08.67-.23.972a.25.25 0 0 0 .042.28l.007.009a15.016 15.016 0 0 1 2.52 4.6.25.25 0 0 0 .37.132.25.25 0 0 0 .096-.114c.623-1.464.944-3.039.945-4.63a12.005 12.005 0 0 0-5.78-10.258.25.25 0 0 0-.373.274c.547 2.109.85 4.274.901 6.453ZM9.61 5.38a.25.25 0 0 0 .08.31c.34.24.616.561.8.935a.25.25 0 0 0 .3.127.631.631 0 0 1 .206-.034c2.054.078 4.036.772 5.69 1.991a.251.251 0 0 0 .267.024c.046-.024.093-.047.141-.067a.25.25 0 0 0 .151-.23A29.98 29.98 0 0 0 15.957.764a.25.25 0 0 0-.16-.164 11.924 11.924 0 0 0-2.21-.518.252.252 0 0 0-.215.076A22.456 22.456 0 0 0 9.61 5.38Z"
-                                        />
-                                    </g>
-                                </svg>
-                            </div>
-
-                            <div class="pt-3 sm:pt-5">
-                                <h2
-                                    class="text-xl font-semibold text-black dark:text-white"
-                                >
-                                    Vibrant Ecosystem
-                                </h2>
-
-                                <p class="mt-4 text-sm/relaxed">
-                                    Laravel's robust library of first-party
-                                    tools and libraries, such as
-                                    <a
-                                        href="https://forge.laravel.com"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white dark:focus-visible:ring-[#FF2D20]"
-                                        >Forge</a
-                                    >,
-                                    <a
-                                        href="https://vapor.laravel.com"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Vapor</a
-                                    >,
-                                    <a
-                                        href="https://nova.laravel.com"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Nova</a
-                                    >,
-                                    <a
-                                        href="https://envoyer.io"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Envoyer</a
-                                    >, and
-                                    <a
-                                        href="https://herd.laravel.com"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Herd</a
-                                    >
-                                    help you take your projects to the next
-                                    level. Pair them with powerful open source
-                                    libraries like
-                                    <a
-                                        href="https://laravel.com/docs/billing"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Cashier</a
-                                    >,
-                                    <a
-                                        href="https://laravel.com/docs/dusk"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Dusk</a
-                                    >,
-                                    <a
-                                        href="https://laravel.com/docs/broadcasting"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Echo</a
-                                    >,
-                                    <a
-                                        href="https://laravel.com/docs/horizon"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Horizon</a
-                                    >,
-                                    <a
-                                        href="https://laravel.com/docs/sanctum"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Sanctum</a
-                                    >,
-                                    <a
-                                        href="https://laravel.com/docs/telescope"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Telescope</a
-                                    >, and more.
-                                </p>
+                        </div>
+                        <div class="lp-contacto__item">
+                            <div class="lp-contacto__ico">🕐</div>
+                            <div>
+                                <p class="lp-contacto__item-title">Horario de atención</p>
+                                <p class="lp-contacto__item-val">24 horas · 7 días a la semana</p>
                             </div>
                         </div>
                     </div>
-                </main>
+                </div>
 
-                <footer
-                    class="py-16 text-center text-sm text-black dark:text-white/70"
-                >
-                    Laravel v{{ laravelVersion }} (PHP v{{ phpVersion }})
-                </footer>
+                <div class="lp-contacto__form">
+                    <h3 class="lp-contacto__form-title">Envíanos un mensaje</h3>
+                    <div class="lp-cform">
+                        <div class="lp-cform__row">
+                            <div class="lp-cform__field">
+                                <label class="lp-cform__label">Nombre</label>
+                                <input type="text" placeholder="Tu nombre completo" class="lp-cform__input"/>
+                            </div>
+                            <div class="lp-cform__field">
+                                <label class="lp-cform__label">Teléfono</label>
+                                <input type="tel" placeholder="Tu número de contacto" class="lp-cform__input"/>
+                            </div>
+                        </div>
+                        <div class="lp-cform__field">
+                            <label class="lp-cform__label">Correo electrónico</label>
+                            <input type="email" placeholder="tu@correo.com" class="lp-cform__input"/>
+                        </div>
+                        <div class="lp-cform__field">
+                            <label class="lp-cform__label">Mensaje</label>
+                            <textarea rows="4" placeholder="¿En qué podemos ayudarte?" class="lp-cform__input lp-cform__textarea"></textarea>
+                        </div>
+                        <button class="lp-cform__btn">Enviar mensaje</button>
+                    </div>
+                </div>
             </div>
-        </div>
+        </section>
+
+        <!-- ════════════ FOOTER ════════════ -->
+        <footer class="lp-footer">
+            <div class="lp-container lp-footer__inner">
+                <div class="lp-footer__brand">
+                    <svg viewBox="0 0 48 48" fill="none" class="lp-footer__svg">
+                        <circle cx="24" cy="16" r="8" fill="#F5C518"/>
+                        <g stroke="#F5C518" stroke-width="2" stroke-linecap="round">
+                            <line x1="24" y1="2"  x2="24" y2="6"/>
+                            <line x1="37" y1="7"  x2="34.5" y2="9.5"/>
+                            <line x1="42" y1="16" x2="38" y2="16"/>
+                            <line x1="11" y1="7"  x2="13.5" y2="9.5"/>
+                            <line x1="6"  y1="16" x2="10" y2="16"/>
+                        </g>
+                        <ellipse cx="12" cy="36" rx="16" ry="9"  fill="#1a6b2a"/>
+                        <ellipse cx="36" cy="38" rx="16" ry="8"  fill="#228b35"/>
+                        <ellipse cx="24" cy="42" rx="25" ry="8"  fill="#2eaa45"/>
+                    </svg>
+                    <div>
+                        <p class="lp-footer__name">HORIZONTE S.A.S</p>
+                        <p class="lp-footer__sub">Pre Exequiales</p>
+                    </div>
+                </div>
+                <p class="lp-footer__copy">
+                    &copy; {{ new Date().getFullYear() }} Horizonte S.A.S Pre Exequiales · Todos los derechos reservados
+                </p>
+                <div class="lp-footer__links">
+                    <Link v-if="canLogin" :href="route('login')" class="lp-footer__a">Iniciar sesión</Link>
+                    <Link v-if="canRegister" :href="route('register')" class="lp-footer__a">Registrarse</Link>
+                </div>
+            </div>
+        </footer>
+
     </div>
 </template>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --navy:   #0a3d6b;
+    --blue:   #1565a8;
+    --sky:    #2e8bc0;
+    --green:  #2eaa45;
+    --dkgreen:#1a6b2a;
+    --gold:   #f5a623;
+    --gold-lt:#ffe066;
+    --font:   'DM Sans', sans-serif;
+    --serif:  'Playfair Display', serif;
+}
+
+.lp {
+    font-family: var(--font);
+    color: #1e293b;
+    overflow-x: hidden;
+}
+
+/* ── UTILIDADES ── */
+.lp-container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.lp-section { padding: 90px 0; }
+
+.lp-label {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sky);
+    margin-bottom: 12px;
+}
+
+.lp-label--light { color: rgba(255,255,255,0.6); }
+
+.lp-h2 {
+    font-family: var(--serif);
+    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+    color: var(--navy);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 18px;
+}
+
+.lp-h2 em { font-style: italic; color: var(--green); }
+.lp-h2--light { color: #fff; }
+
+.lp-p { font-size: 0.96rem; color: #475569; line-height: 1.7; margin-bottom: 14px; }
+.lp-p--center { text-align: center; max-width: 560px; margin: 0 auto 14px; }
+
+.lp-section-header { text-align: center; margin-bottom: 56px; }
+
+/* ── BOTONES ── */
+.lp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 24px;
+    border-radius: 10px;
+    font-family: var(--font);
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+}
+
+.lp-btn--solid {
+    background: linear-gradient(135deg, var(--navy), var(--green));
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(10,61,107,0.28);
+}
+.lp-btn--solid:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.lp-btn--ghost {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,0.4);
+    backdrop-filter: blur(4px);
+}
+.lp-btn--ghost:hover { background: rgba(255,255,255,0.25); }
+
+.lp-btn--hero-primary {
+    background: #fff;
+    color: var(--navy);
+    font-weight: 700;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+    padding: 13px 28px;
+    font-size: 0.95rem;
+}
+.lp-btn--hero-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.25); }
+
+.lp-btn--hero-ghost {
+    color: rgba(255,255,255,0.9);
+    border: 1.5px solid rgba(255,255,255,0.5);
+    padding: 13px 28px;
+    font-size: 0.95rem;
+}
+.lp-btn--hero-ghost:hover { background: rgba(255,255,255,0.12); }
+
+.lp-btn--white {
+    background: #fff;
+    color: var(--navy);
+    font-weight: 700;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    padding: 13px 28px;
+}
+.lp-btn--white:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,0,0,0.22); }
+
+.lp-btn--outline-white {
+    border: 1.5px solid rgba(255,255,255,0.6);
+    color: #fff;
+    padding: 13px 28px;
+}
+.lp-btn--outline-white:hover { background: rgba(255,255,255,0.12); }
+
+/* ── NAVBAR ── */
+.lp-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 999;
+    background: rgba(10,61,107,0.97);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.lp-nav__inner {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 66px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.lp-nav__brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.lp-nav__svg { width: 42px; height: 42px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+
+.lp-nav__text { display: flex; flex-direction: column; }
+
+.lp-nav__name {
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.06em;
+    line-height: 1;
+}
+
+.lp-nav__sub {
+    font-size: 0.58rem;
+    color: var(--gold-lt);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.lp-nav__links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+}
+
+.lp-nav__a {
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 8px;
+    transition: all 0.18s;
+}
+
+.lp-nav__a:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+.lp-nav__cta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 12px;
+}
+
+.lp-nav__burger {
+    display: none;
+    background: none; border: none; cursor: pointer;
+    color: rgba(255,255,255,0.8);
+    padding: 6px; border-radius: 8px;
+    margin-left: auto;
+}
+
+.lp-nav__burger svg { width: 22px; height: 22px; }
+
+/* Mobile menu */
+.lp-mobile-menu {
+    display: none;
+    flex-direction: column;
+    padding: 12px 24px 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    gap: 4px;
+}
+
+.lp-mobile-menu--open { display: flex; }
+
+.lp-mobile-menu__a {
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 10px 12px;
+    border-radius: 8px;
+    transition: all 0.18s;
+}
+
+.lp-mobile-menu__a:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+.lp-mobile-menu__cta {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+/* ── HERO ── */
+.lp-hero {
+    padding-top: 66px;
+    min-height: 100vh;
+    position: relative;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.lp-hero__bg {
+    position: absolute;
+    inset: 0;
+}
+
+.lp-hero__sky {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, #062b4e 0%, #1262a8 38%, #2e8bc0 68%, #7ec8e3 100%);
+}
+
+.lp-hero__sun-wrap {
+    position: absolute;
+    top: 12%;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: sunRise 1.2s ease-out forwards;
+}
+
+@keyframes sunRise {
+    from { transform: translateX(-50%) translateY(50px); opacity: 0; }
+    to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+}
+
+.lp-hero__sun {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 38%, #ffe45a, #f59819);
+    box-shadow: 0 0 80px 36px rgba(245,152,25,0.5), 0 0 160px 80px rgba(245,152,25,0.2);
+    position: relative;
+    animation: sunGlow 5s ease-in-out infinite alternate;
+}
+
+@keyframes sunGlow {
+    from { box-shadow: 0 0 80px 36px rgba(245,152,25,0.5), 0 0 160px 80px rgba(245,152,25,0.2); }
+    to   { box-shadow: 0 0 110px 50px rgba(245,152,25,0.65), 0 0 200px 100px rgba(245,152,25,0.3); }
+}
+
+.lp-hero__rays {
+    position: absolute; inset: -55px; border-radius: 50%;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,   rgba(255,220,70,0.22) 5deg,  transparent 10deg,
+        transparent 24deg,  rgba(255,220,70,0.22) 29deg, transparent 34deg,
+        transparent 48deg,  rgba(255,220,70,0.22) 53deg, transparent 58deg,
+        transparent 72deg,  rgba(255,220,70,0.22) 77deg, transparent 82deg,
+        transparent 96deg,  rgba(255,220,70,0.22) 101deg,transparent 106deg,
+        transparent 120deg, rgba(255,220,70,0.22) 125deg,transparent 130deg,
+        transparent 144deg, rgba(255,220,70,0.22) 149deg,transparent 154deg,
+        transparent 168deg, rgba(255,220,70,0.22) 173deg,transparent 178deg,
+        transparent 192deg, rgba(255,220,70,0.22) 197deg,transparent 202deg,
+        transparent 216deg, rgba(255,220,70,0.22) 221deg,transparent 226deg,
+        transparent 240deg, rgba(255,220,70,0.22) 245deg,transparent 250deg,
+        transparent 264deg, rgba(255,220,70,0.22) 269deg,transparent 274deg,
+        transparent 288deg, rgba(255,220,70,0.22) 293deg,transparent 298deg,
+        transparent 312deg, rgba(255,220,70,0.22) 317deg,transparent 322deg,
+        transparent 336deg, rgba(255,220,70,0.22) 341deg,transparent 346deg,
+        transparent 360deg
+    );
+    animation: rotateSun 24s linear infinite;
+}
+
+@keyframes rotateSun { to { transform: rotate(360deg); } }
+
+.lp-hero__hills { position: absolute; bottom: 0; left: 0; right: 0; height: 45%; }
+
+.lp-hero__hill { position: absolute; bottom: 0; border-radius: 50% 50% 0 0; }
+.lp-hero__hill--1 { left: -10%; right: -10%; height: 55%; background: linear-gradient(180deg, #0f4a1e, #0a3014); }
+.lp-hero__hill--2 { left: -6%;  right: 28%;  height: 72%; background: linear-gradient(180deg, #155824, #0f4a1e); }
+.lp-hero__hill--3 { left: 24%;  right: -8%;  height: 65%; background: linear-gradient(180deg, #1e7f33, #155824); }
+
+.lp-hero__content {
+    position: relative;
+    z-index: 10;
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 100px 24px 180px;
+    text-align: center;
+    animation: fadeUp 0.8s ease-out 0.3s both;
+}
+
+@keyframes fadeUp {
+    from { transform: translateY(28px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+.lp-hero__badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: var(--gold-lt);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 6px 16px;
+    border-radius: 99px;
+    margin-bottom: 22px;
+    backdrop-filter: blur(4px);
+}
+
+.lp-hero__h1 {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 6vw, 3.8rem);
+    color: #fff;
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 22px;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+}
+
+.lp-hero__h1--accent { color: var(--gold-lt); }
+
+.lp-hero__p {
+    font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+    color: rgba(255,255,255,0.82);
+    max-width: 600px;
+    margin: 0 auto 36px;
+    line-height: 1.7;
+}
+
+.lp-hero__btns {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 52px;
+}
+
+.lp-hero__stats {
+    display: inline-flex;
+    align-items: center;
+    gap: 20px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 16px;
+    padding: 16px 28px;
+    backdrop-filter: blur(8px);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.lp-hero__stat { text-align: center; }
+
+.lp-hero__stat-n {
+    display: block;
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--gold-lt);
+}
+
+.lp-hero__stat-l {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.65);
+}
+
+.lp-hero__stat-sep {
+    width: 1px; height: 36px;
+    background: rgba(255,255,255,0.2);
+}
+
+/* ── NOSOTROS ── */
+.lp-about { background: #fff; }
+
+.lp-about__grid {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 64px;
+    align-items: center;
+}
+
+.lp-about__visual {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lp-about__emblem svg {
+    width: 260px; height: 260px;
+    filter: drop-shadow(0 8px 30px rgba(10,61,107,0.2));
+}
+
+.lp-about__badge-float {
+    position: absolute;
+    bottom: -10px; right: 10px;
+    background: linear-gradient(135deg, var(--navy), var(--blue));
+    border-radius: 50%;
+    width: 80px; height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(10,61,107,0.35);
+}
+
+.lp-about__badge-n {
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--gold-lt);
+    line-height: 1;
+}
+
+.lp-about__badge-l {
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.65);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.lp-about__chips {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.lp-chip {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 99px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.lp-chip--blue  { background: #dbeafe; color: #1e40af; }
+.lp-chip--green { background: #dcfce7; color: #166534; }
+.lp-chip--gold  { background: #fef3c7; color: #92400e; }
+
+/* ── PLANES ── */
+.lp-planes { background: #f0f4f8; }
+
+.lp-planes__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+}
+
+.lp-plan {
+    background: #fff;
+    border-radius: 20px;
+    padding: 32px 26px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    position: relative;
+    border: 2px solid transparent;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.lp-plan:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.12);
+}
+
+.lp-plan--star {
+    border-color: var(--green);
+    box-shadow: 0 8px 36px rgba(46,170,69,0.2);
+}
+
+.lp-plan__badge {
+    position: absolute;
+    top: -14px; left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--dkgreen), var(--green));
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 5px 16px;
+    border-radius: 99px;
+    white-space: nowrap;
+    box-shadow: 0 2px 10px rgba(46,170,69,0.35);
+}
+
+.lp-plan__header { text-align: center; }
+
+.lp-plan__name {
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    color: var(--navy);
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.lp-plan__price {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.lp-plan__amount {
+    font-family: var(--serif);
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+.lp-plan--sky   .lp-plan__amount { color: var(--blue); }
+.lp-plan--green .lp-plan__amount { color: var(--green); }
+.lp-plan--gold  .lp-plan__amount { color: #b45309; }
+
+.lp-plan__period { font-size: 0.82rem; color: #64748b; }
+
+.lp-plan__desc { font-size: 0.82rem; color: #64748b; }
+
+.lp-plan__list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+}
+
+.lp-plan__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    font-size: 0.87rem;
+    color: #334155;
+    line-height: 1.4;
+}
+
+.lp-plan__check { width: 17px; height: 17px; flex-shrink: 0; margin-top: 1px; }
+
+.lp-plan--sky   .lp-plan__check { color: var(--blue); }
+.lp-plan--green .lp-plan__check { color: var(--green); }
+.lp-plan--gold  .lp-plan__check { color: #d97706; }
+
+.lp-plan__cta {
+    display: block;
+    text-align: center;
+    padding: 12px;
+    border-radius: 11px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 700;
+    transition: all 0.2s;
+    font-family: var(--font);
+}
+
+.lp-plan--sky   .lp-plan__cta { background: linear-gradient(135deg, var(--navy), var(--blue)); color: #fff; }
+.lp-plan--green .lp-plan__cta { background: linear-gradient(135deg, var(--dkgreen), var(--green)); color: #fff; }
+.lp-plan--gold  .lp-plan__cta { background: linear-gradient(135deg, #92400e, #d97706); color: #fff; }
+
+.lp-plan__cta:hover { opacity: 0.88; transform: translateY(-1px); }
+
+/* ── VALORES ── */
+.lp-valores {
+    background: linear-gradient(135deg, var(--navy) 0%, #0d5c28 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.lp-valores::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.lp-valores__grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+
+.lp-valor {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 18px;
+    padding: 28px 22px;
+    text-align: center;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.lp-valor:hover {
+    transform: translateY(-4px);
+    background: rgba(255,255,255,0.1);
+}
+
+.lp-valor__icon {
+    font-size: 2.2rem;
+    margin-bottom: 14px;
+}
+
+.lp-valor__title {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    color: var(--gold-lt);
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.lp-valor__desc {
+    font-size: 0.84rem;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.6;
+}
+
+/* ── CTA FINAL ── */
+.lp-cta-final {
+    position: relative;
+    background: linear-gradient(135deg, var(--dkgreen) 0%, var(--blue) 100%);
+    overflow: hidden;
+    padding: 80px 0;
+    text-align: center;
+}
+
+.lp-cta-final__bg {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 60%;
+    pointer-events: none;
+}
+
+.lp-cta-final__hill {
+    position: absolute;
+    bottom: 0;
+    border-radius: 50% 50% 0 0;
+}
+
+.lp-cta-final__hill--1 { left: -5%; right: 40%; height: 100%; background: rgba(0,0,0,0.1); }
+.lp-cta-final__hill--2 { left: 35%; right: -5%; height: 80%;  background: rgba(0,0,0,0.07); }
+
+.lp-cta-final__content { position: relative; z-index: 2; }
+
+.lp-cta-final__h2 {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    color: #fff;
+    font-weight: 700;
+    margin-bottom: 18px;
+    line-height: 1.2;
+}
+
+.lp-cta-final__p {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.78);
+    margin-bottom: 36px;
+}
+
+.lp-cta-final__btns {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+/* ── CONTACTO ── */
+.lp-contacto { background: #fff; }
+
+.lp-contacto__grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 60px;
+    align-items: start;
+}
+
+.lp-contacto__items { margin-top: 28px; display: flex; flex-direction: column; gap: 20px; }
+
+.lp-contacto__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.lp-contacto__ico {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: #f0f4f8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.lp-contacto__item-title { font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
+.lp-contacto__item-val   { font-size: 0.9rem; color: #1e293b; font-weight: 500; }
+
+.lp-contacto__form { background: #f8fafc; border-radius: 18px; padding: 32px 28px; border: 1.5px solid #e2e8f0; }
+
+.lp-contacto__form-title {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    color: var(--navy);
+    font-weight: 700;
+    margin-bottom: 22px;
+}
+
+.lp-cform { display: flex; flex-direction: column; gap: 14px; }
+.lp-cform__row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.lp-cform__field { display: flex; flex-direction: column; gap: 6px; }
+.lp-cform__label { font-size: 0.78rem; font-weight: 600; color: #334155; }
+
+.lp-cform__input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.87rem;
+    font-family: var(--font);
+    color: #1e293b;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    resize: none;
+}
+
+.lp-cform__input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(21,101,168,0.12);
+}
+
+.lp-cform__input::placeholder { color: #cbd5e1; }
+.lp-cform__textarea { resize: vertical; }
+
+.lp-cform__btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 11px;
+    background: linear-gradient(135deg, var(--navy), var(--green));
+    color: #fff;
+    font-family: var(--font);
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    box-shadow: 0 4px 18px rgba(10,61,107,0.28);
+}
+
+.lp-cform__btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+/* ── FOOTER ── */
+.lp-footer {
+    background: var(--navy-dk, #071e38);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 28px 0;
+}
+
+.lp-footer__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.lp-footer__brand { display: flex; align-items: center; gap: 10px; }
+
+.lp-footer__svg { width: 36px; height: 36px; }
+
+.lp-footer__name {
+    font-family: var(--serif);
+    font-size: 0.9rem;
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 1;
+}
+
+.lp-footer__sub {
+    font-size: 0.6rem;
+    color: var(--gold-lt);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.lp-footer__copy { font-size: 0.75rem; color: rgba(255,255,255,0.38); }
+
+.lp-footer__links { display: flex; gap: 16px; }
+
+.lp-footer__a {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    transition: color 0.18s;
+}
+
+.lp-footer__a:hover { color: var(--gold-lt); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1024px) {
+    .lp-planes__grid   { grid-template-columns: 1fr 1fr; }
+    .lp-valores__grid  { grid-template-columns: repeat(2, 1fr); }
+    .lp-about__grid    { grid-template-columns: 1fr; gap: 36px; }
+    .lp-about__visual  { order: -1; }
+    .lp-contacto__grid { grid-template-columns: 1fr; gap: 40px; }
+}
+
+@media (max-width: 768px) {
+    .lp-nav__links, .lp-nav__cta { display: none; }
+    .lp-nav__burger { display: flex; }
+    .lp-section { padding: 64px 0; }
+    .lp-planes__grid { grid-template-columns: 1fr; max-width: 380px; margin: 0 auto; }
+    .lp-valores__grid { grid-template-columns: 1fr 1fr; }
+    .lp-hero__stats { flex-direction: column; gap: 14px; }
+    .lp-hero__stat-sep { width: 60px; height: 1px; }
+    .lp-footer__inner { flex-direction: column; text-align: center; }
+    .lp-cform__row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+    .lp-valores__grid { grid-template-columns: 1fr; }
+    .lp-hero__content { padding: 80px 16px 140px; }
+}
+</style>
