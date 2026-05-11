@@ -11,25 +11,23 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+
+        // ── Middleware del grupo web (Inertia + assets) ──
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+            // ⚠️ CheckUserIsActive NO va aquí todavía
+            // Se agrega después de verificar que la migración is_active corrió
         ]);
 
-        //
-    })
-    ->withMiddleware(function (Middleware $middleware) {
+        // ── Aliases para usar en rutas ──
         $middleware->alias([
-            'active' => \App\Http\Middleware\CheckUserIsActive::class,
-            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'active'              => \App\Http\Middleware\CheckUserIsActive::class,
+            'role'                => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission'          => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission'  => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
-     
-        // Aplicar el check de usuario activo a todas las rutas web autenticadas
-        $middleware->appendToGroup('web', [
-            \App\Http\Middleware\CheckUserIsActive::class,
-        ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

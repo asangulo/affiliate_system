@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 
 const page = usePage();
-const user = computed(() => page.props.auth.user);
+const user = computed(() => page.props.auth?.user ?? null);
 const sidebarOpen = ref(false);
 
 const navLinks = [
@@ -82,7 +82,7 @@ const navLinks = [
             <!-- Footer sidebar -->
             <div class="hz-sidebar-footer">
                 <div class="hz-user">
-                    <div class="hz-user__av">{{ user?.name?.charAt(0)?.toUpperCase() ?? 'U' }}</div>
+                    <div class="hz-user__av">{{ user?.name?.charAt(0)?.toUpperCase() ?? '?' }}</div>
                     <div class="hz-user__info">
                         <span class="hz-user__name">{{ user?.name }}</span>
                         <span class="hz-user__email">{{ user?.email }}</span>
@@ -114,7 +114,7 @@ const navLinks = [
                     <span class="hz-topbar__sub">Pre Exequiales</span>
                 </div>
                 <div class="hz-topbar__right">
-                    <div class="hz-topbar__av">{{ user?.name?.charAt(0)?.toUpperCase() ?? 'U' }}</div>
+                    <div class="hz-topbar__av">{{ user?.name?.charAt(0)?.toUpperCase() ?? '?' }}</div>
                 </div>
             </header>
 
