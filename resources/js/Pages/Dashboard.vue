@@ -4,6 +4,7 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 const page = usePage();
+const isSuperAdmin = computed(() => page.props.auth?.roles?.includes('super_admin') ?? false);
 const user = computed(() => page.props.auth?.user ?? null);
 const hora = new Date().getHours();
 const saludo = hora < 12 ? 'Buenos días' : hora < 18 ? 'Buenas tardes' : 'Buenas noches';
@@ -101,6 +102,19 @@ const accesos = [
                     <div class="qa__body">
                         <span class="qa__label">{{ acc.label }}</span>
                         <span class="qa__desc">{{ acc.desc }}</span>
+                    </div>
+                    <svg class="qa__arrow" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </Link>
+                <!-- Solo super_admin -->
+                <Link v-if="isSuperAdmin" :href="route('admin.users.index')" class="qa qa--purple">
+                    <svg class="qa__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                    <div class="qa__body">
+                        <span class="qa__label">Usuarios</span>
+                        <span class="qa__desc">Gestionar cuentas y roles</span>
                     </div>
                     <svg class="qa__arrow" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
@@ -251,6 +265,7 @@ const accesos = [
 .qa--green { background: linear-gradient(135deg, #1a6b2a, #2eaa45); }
 .qa--gold  { background: linear-gradient(135deg, #c77b00, #f5a623); }
 .qa--navy  { background: linear-gradient(135deg, #071e38, #0a3d6b); }
+.qa--purple { background: linear-gradient(135deg, #4c1d95, #7c3aed); }
 
 .qa__icon { width: 28px; height: 28px; stroke: rgba(255,255,255,0.9); flex-shrink: 0; }
 
@@ -284,6 +299,8 @@ const accesos = [
     fill: rgba(255,255,255,0.75);
     transform: translateX(2px);
 }
+
+
 
 /* ── Empresa ── */
 .db-empresa {
