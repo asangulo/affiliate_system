@@ -62,8 +62,8 @@ RUN mkdir -p \
     storage/framework/views \
     bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
-
+    && chmod -R ug+rwX storage bootstrap/cache
+    
 EXPOSE 80
 
 CMD php artisan config:cache && \
