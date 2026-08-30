@@ -6,8 +6,7 @@ RUN apt-get update && apt-get install -y \
     zip unzip git \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
-        pdo pdo_mysql zip mbstring exif pcntl bcmath \
-        xml ctype fileinfo tokenizer intl gd \
+        pdo pdo_mysql zip mbstring exif pcntl bcmath intl gd \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN a2enmod rewrite headers
