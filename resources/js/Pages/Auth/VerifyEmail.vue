@@ -1,7 +1,3 @@
-<!-- ════════════════════════════════════════════════════════════════
-     VerifyEmail.vue  —  Coloca en resources/js/Pages/Auth/
-     ════════════════════════════════════════════════════════════════ -->
-<!--
 <script setup>
 import { computed } from 'vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
@@ -30,7 +26,6 @@ const sent = computed(() => props.status === 'verification-link-sent');
         </form>
     </GuestLayout>
 </template>
--->
 
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
     *, *::before, *::after { box-sizing: border-box; }

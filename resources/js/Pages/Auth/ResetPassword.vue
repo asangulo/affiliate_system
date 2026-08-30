@@ -1,7 +1,3 @@
-<!-- ════════════════════════════════════════════════════════════════
-     ResetPassword.vue  —  Coloca en resources/js/Pages/Auth/
-     ════════════════════════════════════════════════════════════════ -->
-<!--
 <script setup>
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
@@ -57,7 +53,7 @@ const submit = () => form.post(route('password.store'), { onFinish: () => form.r
         </form>
     </GuestLayout>
 </template>
--->
+
 
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
     *, *::before, *::after { box-sizing: border-box; }

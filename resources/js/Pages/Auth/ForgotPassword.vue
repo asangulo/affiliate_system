@@ -1,7 +1,4 @@
-<!-- ════════════════════════════════════════════════════════════════
-     ForgotPassword.vue  —  Coloca en resources/js/Pages/Auth/
-     ════════════════════════════════════════════════════════════════ -->
-<!--
+
 <script setup>
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
