@@ -1,582 +1,296 @@
 <?php
+// app/Imports/AffiliatesImport.php
 
 namespace App\Imports;
 
 use App\Models\Affiliate;
+use App\Models\Beneficiary;
 use App\Models\Branch;
 use App\Models\Plan;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
-use Maatwebsite\Excel\Row; // Clase necesaria para OnEachRow
-use Maatwebsite\Excel\Concerns\OnEachRow; // Interfaz correcta
+use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithUpserts;
+use Maatwebsite\Excel\Row;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
-class AffiliatesImport implements OnEachRow, WithHeadingRow, WithUpserts
+class AffiliatesImport implements OnEachRow, WithHeadingRow
 {
-    private string $commentColumn = 'Q';
+    // ── Columna de comentarios ────────────────────────────────────────────────
+    private string $commentColumn = 'R';
 
-    /**
-     * IMPORTANTE: El método debe llamarse exactamente onRow
-     */
-    public function onRow(Row $row)
+    // ── Relaciones en ORDEN (las más largas primero para evitar solapamientos) ─
+    private array $relaciones = [
+        'HIJASTRO', 'HIJASTRA',
+        'BISABUELO', 'BISABUELA',
+        'COMPAÑERO', 'COMPAÑERA', 'COMPANERO', 'COMPANERA',
+        'ESPOSO', 'ESPOSA',
+        'HERMANO', 'HERMANA',
+        'SOBRINO', 'SOBRINA',
+        'SUEGRO', 'SUEGRA',
+        'ABUELO', 'ABUELA',
+        'PRIMO', 'PRIMA',
+        'PADRE', 'MADRE',
+        'NIETO', 'NIETA',
+        'CUÑADO', 'CUÑADA',
+        'EMPLEADO', 'EMPLEADA',
+        'AMIGO', 'AMIGA',
+        'YERNO', 'NUERA',
+        'HIJO', 'HIJA',
+        'MAMA', 'PAPA',
+        'TIO', 'TIA',
+        'PAREJA',
+        'CANINO',
+    ];
+
+    // =========================================================================
+    //  FILA PRINCIPAL
+    // =========================================================================
+    public function onRow(Row $row): void
     {
         $rowIndex = $row->getIndex();
-        $rowData = $row->toArray(); // Convierte la fila en array usando los encabezados
+        $data     = $row->toArray();
 
-        if (!isset($rowData['cedula']) || empty($rowData['cedula'])) {
-            Log::debug('Fila omitida por cédula vacía.', [
-                'row' => $rowIndex,
-                'available_keys' => array_keys($rowData),
-            ]);
-            return;
-        }
+        // Ignorar filas sin cédula
+        $rawId = trim((string)($data['cedula'] ?? ''));
+        $cleanId = preg_replace('/\D/', '', $rawId);
+        if (empty($cleanId)) return;
 
-        $cleanIdNumber = preg_replace('/\D/', '', $rowData['cedula']);
+        // Sede y plan
+        $branch   = Branch::firstOrCreate(['name' => 'Granada']);
+        $planName = $this->cleanText($data['plan'] ?? 'BÁSICO') ?: 'BÁSICO';
+        $plan     = Plan::firstOrCreate(['name' => $planName]);
 
-        Log::info('Procesando fila de afiliado.', [
-            'row' => $rowIndex,
-            'id_number' => $cleanIdNumber,
-            'contract_number' => $rowData['contrato'] ?? null,
-            'comment_column' => $this->commentColumn,
+        // Upsert afiliado
+        $affiliate = Affiliate::firstOrNew(['id_number' => $cleanId]);
+        $affiliate->fill([
+            'contract_number'  => $this->cleanText($data['contrato'] ?? null),
+            'full_name'        => $this->cleanText($data['nombre_afiliado'] ?? null),
+            'branch_id'        => $branch->id,
+            'plan_id'          => $plan->id,
+            'fee_amount'       => $this->cleanMoney($data['valor_cuota'] ?? 0),
+            'phone'            => $this->cleanText($data['telefono_1'] ?? null),
+            'email'            => $this->cleanEmail($data['correo_electronico'] ?? null),
+            'address'          => $this->cleanText($data['direccion'] ?? null),
+            'neighborhood'     => $this->cleanText($data['barrio'] ?? null),
+            'advisor_name'     => $this->cleanText($data['asesor'] ?? null),
+            'affiliation_date' => $this->cleanDate($data['fecha_afiliacion_diamesano'] ?? null),
+            'birth_date'       => $this->cleanDate($data['fecha_de_nacimiento'] ?? null),
         ]);
-
-        // 1. Obtener relaciones
-        $branch = Branch::firstOrCreate(['name' => 'Bogotá']);
-        $planName = trim($rowData['plan'] ?? 'BASICO');
-        $plan = Plan::firstOrCreate(['name' => $planName]);
-
-        // 2. Usar el modelo Affiliate (con los campos de tu $fillable)
-        $affiliate = $this->upsertAffiliate($cleanIdNumber, [
-            'contract_number'   => $this->cleanText($rowData['contrato'] ?? null),
-            'full_name'         => $this->cleanText($rowData['nombre_afiliado'] ?? null),
-            'branch_id'         => $branch->id,
-            'plan_id'           => $plan->id,
-            'fee_amount'        => $this->cleanMoney($rowData['valor_cuota'] ?? 0),
-            'phone'             => $this->cleanText($rowData['telefono'] ?? null),
-            'email'             => $this->cleanText($rowData['correo_electronico'] ?? null),
-            'affiliation_date'  => $this->cleanDate($rowData['fecha_afiliacion'] ?? null),
-        ]);
-
-        // 3. Procesar comentarios de la columna Q (Beneficiarios y observación del titular)
-        $commentText = $this->getCommentText($row, $rowIndex);
-
-        if ($commentText !== null) {
-            $this->processBeneficiaries($affiliate, $commentText);
-            return;
-        }
-
-        Log::warning('No se encontró comentario en la celda esperada para beneficiarios.', [
-            'row' => $rowIndex,
-            'affiliate_id' => $affiliate->id,
-            'id_number' => $affiliate->id_number,
-            'cell' => $this->commentColumn . $rowIndex,
-        ]);
-    }
-
-    private function getCommentText(Row $row, int $rowIndex): ?string
-    {
-        $sheet = $row->getDelegate()->getWorksheet();
-        $comment = $sheet->getComment($this->commentColumn . $rowIndex);
-        $text = trim($comment?->getText()?->getPlainText() ?? '');
-
-        Log::debug('Comentario leído desde Excel.', [
-            'row' => $rowIndex,
-            'cell' => $this->commentColumn . $rowIndex,
-            'has_comment' => $text !== '',
-            'comment_preview' => $this->previewText($text),
-        ]);
-
-        return $text !== '' ? $text : null;
-    }
-
-    private function processBeneficiaries($affiliate, string $text): void
-    {
-        [$beneficiaries, $holderNote] = $this->parseCommentText($text);
-
-        Log::info('Resultado del parseo de comentario.', [
-            'affiliate_id' => $affiliate->id,
-            'id_number' => $affiliate->id_number,
-            'beneficiaries_count' => count($beneficiaries),
-            'holder_note' => $holderNote,
-            'comment_preview' => $this->previewText($text),
-        ]);
-
-        if (empty($beneficiaries)) {
-            Log::warning('No se detectaron beneficiarios en el comentario del Excel.', [
-                'affiliate_id' => $affiliate->id,
-                'id_number' => $affiliate->id_number,
-                'comment_preview' => $this->previewText($text),
-            ]);
-        }
-
-        foreach ($beneficiaries as $beneficiaryData) {
-            $beneficiary = $this->upsertBeneficiary($affiliate, [
-                'full_name' => $beneficiaryData['full_name'],
-                'relationship' => $beneficiaryData['relationship'],
-                'age' => $beneficiaryData['age'],
-                'auxilio' => $beneficiaryData['auxilio'],
-                'holder_note' => $holderNote,
-            ]);
-
-            Log::debug('Beneficiario importado o actualizado.', [
-                'affiliate_id' => $affiliate->id,
-                'id_number' => $affiliate->id_number,
-                'beneficiary' => $beneficiaryData,
-                'beneficiary_id' => $beneficiary->id,
-            ]);
-        }
-    }
-
-    private function parseCommentText(string $text): array
-    {
-        $beneficiaries = [];
-        $noteLines = [];
-        $pendingAux = null;
-        $capturingNoteContinuation = false;
-
-        foreach (preg_split('/\R/u', $text) as $rawLine) {
-            $line = trim(preg_replace('/\s+/u', ' ', $rawLine));
-
-            if ($line === '' || $this->isHeaderLine($line)) {
-                if ($line !== '') {
-                    Log::debug('Línea descartada por ser encabezado del comentario.', [
-                        'line' => $line,
-                    ]);
-                }
-                continue;
-            }
-
-            if ($this->isNoteLine($line) || $this->looksLikeFreeTextNote($line)) {
-                Log::debug('Línea identificada como observación.', [
-                    'line' => $line,
-                ]);
-                $noteLines[] = $this->extractNoteText($line);
-                $capturingNoteContinuation = true;
-                continue;
-            }
-
-            if ($this->isAuxOnlyLine($line)) {
-                Log::debug('Línea identificada como AUX %.', [
-                    'line' => $line,
-                ]);
-                if (!empty($beneficiaries) && empty($beneficiaries[array_key_last($beneficiaries)]['auxilio'])) {
-                    $beneficiaries[array_key_last($beneficiaries)]['auxilio'] = $line;
-                } else {
-                    $pendingAux = $line;
-                }
-                continue;
-            }
-
-            $beneficiaryData = $this->parseBeneficiaryLine($line);
-
-            if ($beneficiaryData !== null) {
-                Log::debug('Línea convertida en beneficiario.', [
-                    'line' => $line,
-                    'parsed' => $beneficiaryData,
-                ]);
-                $capturingNoteContinuation = false;
-                if ($pendingAux !== null && empty($beneficiaryData['auxilio'])) {
-                    $beneficiaryData['auxilio'] = $pendingAux;
-                    $pendingAux = null;
-                }
-
-                $beneficiaries[] = $beneficiaryData;
-                continue;
-            }
-
-            if ($capturingNoteContinuation) {
-                Log::debug('Línea agregada como continuación de observación.', [
-                    'line' => $line,
-                ]);
-            }
-
-            Log::debug('Línea no reconocida como beneficiario; se tratará como nota.', [
-                'line' => $line,
-            ]);
-            $noteLines[] = $line;
-        }
-
-        $holderNote = trim(implode(' ', array_filter($noteLines)));
-
-        return [$beneficiaries, $holderNote !== '' ? $holderNote : null];
-    }
-
-    private function parseBeneficiaryLine(string $line): ?array
-    {
-        $parts = preg_split('/\s+/u', $line);
-
-        if ($parts === false || count($parts) < 3) {
-            Log::debug('No se pudo parsear beneficiario por cantidad insuficiente de segmentos.', [
-                'line' => $line,
-                'parts' => $parts,
-            ]);
-            return null;
-        }
-
-        $aux = null;
-
-        if ($this->isAuxOnlyLine(end($parts))) {
-            $aux = array_pop($parts);
-        }
-
-        $ageIndex = null;
-        $age = null;
-
-        for ($i = count($parts) - 2; $i >= 1; $i--) {
-            if (preg_match('/^\d{1,3}$/', $parts[$i])) {
-                $ageIndex = $i;
-                $age = $parts[$i];
-
-                if (isset($parts[$i + 1]) && $this->isMonthToken($parts[$i + 1])) {
-                    $age = $parts[$i] . ' ' . $parts[$i + 1];
-                }
-
-                break;
-            }
-        }
-
-        if ($ageIndex === null) {
-            Log::debug('No se pudo parsear beneficiario porque no se encontró una edad válida.', [
-                'line' => $line,
-                'parts' => $parts,
-            ]);
-            return null;
-        }
-
-        $relationshipParts = array_slice(
-            $parts,
-            isset($parts[$ageIndex + 1]) && $this->isMonthToken($parts[$ageIndex + 1]) ? $ageIndex + 2 : $ageIndex + 1
-        );
-        $nameParts = array_slice($parts, 0, $ageIndex);
-
-        if (!empty($nameParts) && $this->looksLikeDocumentToken(end($nameParts))) {
-            array_pop($nameParts);
-        }
-
-        $name = trim(implode(' ', $nameParts));
-        $relationship = trim(implode(' ', $relationshipParts));
-
-        if ($name === '' || $relationship === '' || !$this->isLikelyRelationship($relationship)) {
-            Log::debug('No se pudo parsear beneficiario por nombre o parentesco vacío.', [
-                'line' => $line,
-                'name' => $name,
-                'relationship' => $relationship,
-            ]);
-            return null;
-        }
-
-        return [
-            'full_name' => $this->cleanText($name),
-            'relationship' => $this->normalizeRelationship($relationship),
-            'age' => $age,
-            'auxilio' => $aux,
-        ];
-    }
-
-    private function upsertAffiliate(string $idNumber, array $attributes): Affiliate
-    {
-        $affiliate = Affiliate::firstOrNew(['id_number' => $idNumber]);
-        $affiliate->fill($attributes);
-
-        if (!$affiliate->exists) {
-            $affiliate->save();
-
-            Log::info('Afiliado creado durante importación.', [
-                'id_number' => $idNumber,
-                'affiliate_id' => $affiliate->id,
-            ]);
-
-            return $affiliate;
-        }
-
-        if (!$affiliate->isDirty()) {
-            Log::debug('Afiliado sin cambios; se omite actualización.', [
-                'id_number' => $idNumber,
-                'affiliate_id' => $affiliate->id,
-            ]);
-
-            return $affiliate;
-        }
-
-        $dirty = $affiliate->getDirty();
         $affiliate->save();
 
-        Log::info('Afiliado actualizado por cambios detectados.', [
-            'id_number' => $idNumber,
-            'affiliate_id' => $affiliate->id,
-            'dirty_fields' => array_keys($dirty),
-        ]);
-
-        return $affiliate;
+        // Leer comentario columna R y procesar beneficiarios
+        $commentText = $this->getCommentText($row, $rowIndex);
+        if ($commentText !== null) {
+            $this->processBeneficiaries($affiliate, $commentText);
+        }
     }
 
-    private function upsertBeneficiary(Affiliate $affiliate, array $attributes)
+    // =========================================================================
+    //  LEER COMENTARIO (threaded + normal)
+    // =========================================================================
+    private function getCommentText(Row $row, int $rowIndex): ?string
     {
-        $lookupName = $this->cleanText($attributes['full_name'] ?? null);
-        $beneficiary = $affiliate->beneficiaries()->firstOrNew([
-            'full_name' => $lookupName,
-        ]);
+        try {
+            $sheet   = $row->getDelegate()->getWorksheet();
+            $cellRef = $this->commentColumn . $rowIndex;
+            $comment = $sheet->getComment($cellRef);
 
-        $beneficiary->fill([
-            'full_name' => $lookupName,
-            'relationship' => $attributes['relationship'] ?? null,
-            'age' => $attributes['age'] ?? null,
-            'auxilio' => $attributes['auxilio'] ?? null,
-            'holder_note' => $attributes['holder_note'] ?? null,
-        ]);
+            if (!$comment) return null;
 
-        if (!$beneficiary->exists) {
-            $beneficiary->save();
+            $raw = $comment->getText()->getPlainText();
 
-            Log::info('Beneficiario creado durante importación.', [
-                'affiliate_id' => $affiliate->id,
-                'beneficiary' => $lookupName,
+            // Eliminar prefijo de threaded comments (todo lo que va antes del contenido real)
+            // El prefijo siempre termina con la URL de Microsoft y luego "Comment:" o "\n"
+            $raw = preg_replace(
+                '/\[Threaded comment\].*?(?=\n\s*\n|\nComment\s*:|\nNOMBRES|\nNombre)/su',
+                '',
+                $raw
+            );
+
+            // Eliminar líneas "Comment:" y "Reply:" que deja el formato threaded
+            $raw = preg_replace('/^(Comment|Reply)\s*:\s*\n?/mu', '', $raw);
+
+            // Eliminar la URL de Microsoft si quedó suelta
+            $raw = preg_replace('/https?:\/\/go\.microsoft\.com\S*/u', '', $raw);
+            $raw = preg_replace('/Your version of Excel.*?(?=\n|$)/isu', '', $raw);
+
+            $text = trim($raw ?? '');
+            return $text !== '' ? $text : null;
+
+        } catch (\Throwable $e) {
+            Log::warning('Error leyendo comentario', [
+                'fila'  => $rowIndex,
+                'error' => $e->getMessage(),
             ]);
-
-            return $beneficiary;
+            return null;
         }
+    }
 
-        if (!$beneficiary->isDirty()) {
-            Log::debug('Beneficiario sin cambios; se omite actualización.', [
-                'affiliate_id' => $affiliate->id,
-                'beneficiary_id' => $beneficiary->id,
-                'beneficiary' => $lookupName,
+    // =========================================================================
+    //  PROCESAR BENEFICIARIOS
+    // =========================================================================
+    private function processBeneficiaries(Affiliate $affiliate, string $rawText): void
+    {
+        // Colapsar todo a una sola línea plana (los threaded llegan sin \n entre bens)
+        $flat = preg_replace('/\s+/', ' ', $rawText);
+        $flat = trim($flat ?? '');
+
+        [$beneficiaries, $holderNote] = $this->parseFlatText($flat);
+
+        foreach ($beneficiaries as $b) {
+            $ben = $affiliate->beneficiaries()->firstOrNew(['full_name' => $b['full_name']]);
+            $ben->fill([
+                'full_name'    => $b['full_name'],
+                'relationship' => $b['relationship'],
+                'age'          => $b['age'],
+                'auxilio'      => $b['auxilio'],
+                'holder_note'  => $holderNote,
+                'is_active'    => true,
             ]);
-
-            return $beneficiary;
+            $ben->save();
         }
 
-        $dirty = $beneficiary->getDirty();
-        $beneficiary->save();
-
-        Log::info('Beneficiario actualizado por cambios detectados.', [
-            'affiliate_id' => $affiliate->id,
-            'beneficiary_id' => $beneficiary->id,
-            'beneficiary' => $lookupName,
-            'dirty_fields' => array_keys($dirty),
+        Log::info('Beneficiarios procesados', [
+            'affiliate'   => $affiliate->id_number,
+            'count'       => count($beneficiaries),
+            'holder_note' => $holderNote,
         ]);
-
-        return $beneficiary;
     }
 
-    private function isHeaderLine(string $line): bool
+    // =========================================================================
+    //  PARSER PLANO — funciona sobre texto sin saltos de línea
+    //  Patrón: NOMBRE... EDAD PARENTESCO [AUX%] NOMBRE...
+    // =========================================================================
+    private function parseFlatText(string $texto): array
     {
-        $normalized = $this->normalizeLine($line);
+        $textoNorm = $this->normText($texto);
 
-        if ($normalized === 'BENEFICIARIOS') {
-            return true;
-        }
+        // Construir regex: EDAD RELACION [AUX%]
+        $relPattern = implode('|', $this->relaciones);
+        $pattern    = '/(\d{1,3}(?:\s+MESES?)?)\s+(' . $relPattern . ')(?:\s+(\d{1,3}(?:[.,]\d+)?\s*%))?/u';
 
-        if (
-            (str_starts_with($normalized, 'NOMBRE') || str_starts_with($normalized, 'NOMBRES'))
-            && str_contains($normalized, 'EDAD')
-            && str_contains($normalized, 'PARENTESCO')
-        ) {
-            return true;
-        }
+        preg_match_all($pattern, $textoNorm, $matches, PREG_OFFSET_CAPTURE);
 
-        return in_array($normalized, ['NOMBRE', 'NOMBRES', 'EDAD', 'PARENTESCO', 'AUX %', 'AUX%'], true);
-    }
+        $beneficiarios = [];
+        $totalMatches  = count($matches[0]);
+        $prevEnd       = 0;
 
-    private function isNoteLine(string $line): bool
-    {
-        $normalized = $this->normalizeLine($line);
+        for ($i = 0; $i < $totalMatches; $i++) {
+            $matchStart = $matches[0][$i][1];
+            $edad       = trim($matches[1][$i][0]);
+            $relacion   = trim($matches[2][$i][0]);
+            $auxilio    = (isset($matches[3][$i][0]) && $matches[3][$i][0] !== '')
+                          ? trim($matches[3][$i][0])
+                          : null;
 
-        return str_starts_with($normalized, 'OBSERVACION')
-            || str_starts_with($normalized, 'NOTA')
-            || str_starts_with($normalized, 'NOTAS');
-    }
+            // Nombre = texto entre fin del match anterior e inicio de la edad
+            $nombreRaw = substr($textoNorm, $prevEnd, $matchStart - $prevEnd);
+            $nombreRaw = $this->limpiarNombre($nombreRaw);
 
-    private function extractNoteText(string $line): string
-    {
-        $normalized = $this->normalizeLine($line);
+            $prevEnd = $matches[0][$i][1] + strlen($matches[0][$i][0]);
 
-        if (
-            str_starts_with($normalized, 'OBSERVACION')
-            || str_starts_with($normalized, 'NOTA')
-            || str_starts_with($normalized, 'NOTAS')
-        ) {
-            $parts = preg_split('/:\s*/u', $line, 2);
-
-            if ($parts !== false && isset($parts[1])) {
-                return trim($parts[1]);
+            if (mb_strlen($nombreRaw) >= 3) {
+                $beneficiarios[] = [
+                    'full_name'    => $this->cleanText(mb_convert_case($nombreRaw, MB_CASE_TITLE, 'UTF-8')),
+                    'relationship' => $this->normalizeRelationship($relacion),
+                    'age'          => $edad,
+                    'auxilio'      => $auxilio,
+                ];
             }
         }
 
-        return trim($line);
+        // Todo lo que quede después del último match → holder_note
+        $resto      = trim(substr($textoNorm, $prevEnd));
+        $holderNote = $resto !== '' ? $this->cleanText($resto) : null;
+
+        return [$beneficiarios, $holderNote];
     }
 
-    private function isAuxOnlyLine(string $line): bool
+    // =========================================================================
+    //  LIMPIAR NOMBRE (quitar cédulas, encabezados, basura)
+    // =========================================================================
+    private function limpiarNombre(string $nombre): string
     {
-        return preg_match('/^\d{1,3}(?:[.,]\d+)?\s*%$/', $line) === 1;
+        // Eliminar residuos del prefijo threaded de Excel
+        $nombre = preg_replace('/your\s+version\s+of\s+excel.*$/iu', '', $nombre);
+        $nombre = preg_replace('/https?:\/\/go\.microsoft\.com\S*/iu', '', $nombre);
+        $nombre = preg_replace('/\[threaded\s+comment\].*$/iu', '', $nombre);
+        // Cédulas con puntos: 39.633.792
+        $nombre = preg_replace('/\b\d{1,3}(?:[.\-]\d{3})+\b/', '', $nombre) ?? $nombre;
+        // Cédulas sin puntos (7-12 dígitos)
+        $nombre = preg_replace('/\b\d{7,12}\b/', '', $nombre) ?? $nombre;
+        // "CC." o "C.C."
+        $nombre = preg_replace('/\bC\.?C\.?\s*/u', '', $nombre) ?? $nombre;
+        // Encabezados frecuentes al inicio
+        $nombre = preg_replace(
+            '/^(NOMBRE\s+Y\s+APELLIDOS?\s*|NOMBRE\s+DOC\.?\s*IDENTIDAD\s*EDAD\s*PARENTESCO\s*(?:AUXILIO%?|AUX%?)?\s*|NOMBRE\s+EDAD\s*PARENTESCO\s*(?:AUXILIO%?|AUX%?)?\s*|NOMBRES\s+EDAD\s*PARENTESCO\s*(?:AUXILIO%?|AUX%?)?\s*|NOMBRES?\s*)/ui',
+            '',
+            $nombre
+        ) ?? $nombre;
+        return trim(preg_replace('/\s+/u', ' ', $nombre) ?? $nombre);
     }
 
-    private function looksLikeFreeTextNote(string $line): bool
+    // =========================================================================
+    //  NORMALIZAR TEXTO (quitar tildes, mayúsculas)
+    // =========================================================================
+    private function normText(string $text): string
     {
-        $normalized = $this->normalizeLine($line);
-        $notePrefixes = [
-            'NO ENTIENDO',
-            'LETRA HORRIBLE',
-            'LOS PAGOS',
-            'PAGOS PARA',
-            'COBRAR ',
-            'PARA LOS COBROS',
-            'EL TITULAR',
-            'LLAMAR ',
-        ];
-
-        foreach ($notePrefixes as $prefix) {
-            if (str_starts_with($normalized, $prefix)) {
-                return true;
-            }
-        }
-
-        return false;
+        $text = mb_strtoupper(trim($text), 'UTF-8');
+        $from = ['Á','É','Í','Ó','Ú','Ñ','á','é','í','ó','ú','ñ'];
+        $to   = ['A','E','I','O','U','N','A','E','I','O','U','N'];
+        return str_replace($from, $to, $text);
     }
 
-    private function looksLikeDocumentToken(string $token): bool
+    private function normalizeRelationship(string $r): string
     {
-        return preg_match('/^\d{1,3}(?:[.\-]\d{3})+$/', $token) === 1;
+        return mb_convert_case(strtolower($r), MB_CASE_TITLE, 'UTF-8');
     }
 
-    private function isMonthToken(string $token): bool
+    // =========================================================================
+    //  HELPERS
+    // =========================================================================
+    private function cleanText(?string $v): ?string
     {
-        return in_array($this->normalizeLine($token), ['MES', 'MESES'], true);
+        if ($v === null) return null;
+        $v = trim(preg_replace('/\s+/u', ' ', $v) ?? $v);
+        return $v !== '' ? $v : null;
     }
 
-    private function isLikelyRelationship(string $relationship): bool
+    private function cleanEmail(?string $v): ?string
     {
-        $normalized = $this->normalizeLine($relationship);
-        $validRelationships = [
-            'ABUELA',
-            'ABUELO',
-            'AMIGA',
-            'AMIGO',
-            'CUÑADA',
-            'CUÑADO',
-            'ESPOSA',
-            'ESPOSO',
-            'FALLECIDO',
-            'HERMANA',
-            'HERMANO',
-            'HERMNO',
-            'HIJA',
-            'HIIJA',
-            'HIJASTRO',
-            'HIJO',
-            'MADRE',
-            'MAMA',
-            'MAMÁ',
-            'NIETA',
-            'NIETO',
-            'NUERA',
-            'PAPA',
-            'PAPÁ',
-            'PADRE',
-            'PAREJA',
-            'PRIMA',
-            'PRIMO',
-            'SOBRINA',
-            'SOBRINO',
-            'SUEGRA',
-            'SUEGRO',
-            'YERNO',
-        ];
-
-        return in_array($normalized, $validRelationships, true);
+        $clean = $this->cleanText($v);
+        if ($clean === null || strtoupper($clean) === 'NO') return null;
+        return filter_var($clean, FILTER_VALIDATE_EMAIL) ? $clean : null;
     }
 
-    private function normalizeLine(string $line): string
+    private function cleanMoney(mixed $value): string
     {
-        $line = trim(mb_strtoupper($line));
-        $line = strtr($line, [
-            'Á' => 'A',
-            'É' => 'E',
-            'Í' => 'I',
-            'Ó' => 'O',
-            'Ú' => 'U',
-        ]);
-        $line = preg_replace('/\s+/u', ' ', $line) ?? $line;
-
-        return trim($line);
-    }
-
-    private function normalizeRelationship(string $relationship): string
-    {
-        $normalized = $this->normalizeLine($relationship);
-        $relationshipMap = [
-            'HIIJA' => 'HIJA',
-            'HERMNO' => 'HERMANO',
-            'MAMA' => 'MAMÁ',
-            'PAPA' => 'PAPÁ',
-        ];
-
-        return $relationshipMap[$normalized] ?? $relationship;
-    }
-
-    private function cleanText(?string $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim(preg_replace('/\s+/u', ' ', $value) ?? $value);
-
-        return $value !== '' ? $value : null;
-    }
-
-    private function previewText(string $text, int $limit = 250): ?string
-    {
-        if ($text === '') {
-            return null;
-        }
-
-        if (mb_strlen($text) <= $limit) {
-            return $text;
-        }
-
-        return mb_substr($text, 0, $limit) . '...';
-    }
-
-    private function cleanMoney($value): string
-    {
-        $normalized = preg_replace('/[^0-9.]/', '', (string) $value) ?? '0';
-
-        return number_format((float) $normalized, 2, '.', '');
+        $n = preg_replace('/[^0-9.]/', '', (string)$value) ?? '0';
+        return number_format((float)$n, 2, '.', '');
     }
 
     private function cleanDate(mixed $value): ?string
     {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
+        if ($value === null || $value === '' || strtoupper((string)$value) === 'NO') return null;
         try {
             if (is_numeric($value)) {
-                $dt = ExcelDate::excelToDateTimeObject((float) $value);
-
-                return $dt->format('Y-m-d');
+                return ExcelDate::excelToDateTimeObject((float)$value)->format('Y-m-d');
             }
-
             if ($value instanceof \DateTimeInterface) {
                 return $value->format('Y-m-d');
             }
-
-            $parsed = Carbon::parse($value);
-
-            return $parsed->format('Y-m-d');
+            return Carbon::parse($value)->format('Y-m-d');
         } catch (\Throwable) {
             return null;
         }
     }
 
-    public function headingRow(): int {
-        return 10;
-    }
-
-    public function uniqueBy() {
-        return 'id_number';
+    // =========================================================================
+    //  CONFIGURACIÓN MAATWEBSITE
+    // =========================================================================
+    public function headingRow(): int
+    {
+        return 1; // encabezados en fila 1
     }
 }

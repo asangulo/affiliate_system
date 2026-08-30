@@ -244,9 +244,8 @@ class AffiliateController extends Controller
 
             DB::commit();
 
-            return redirect()
-                ->route('affiliates.show', $affiliate)
-                ->with('message', 'Afiliado actualizado correctamente.');
+            return redirect()->route('affiliates.edit', $affiliate)
+            ->with('message', 'Afiliado actualizado correctamente.');
 
         } catch (\Throwable $e) {
             DB::rollBack();
