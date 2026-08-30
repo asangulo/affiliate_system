@@ -2,8 +2,13 @@ FROM php:8.2-apache
 
 RUN apt-get update && apt-get install -y \
     libzip-dev libpng-dev libonig-dev libxml2-dev \
+    libcurl4-openssl-dev libssl-dev libicu-dev \
+    libfreetype6-dev libjpeg62-turbo-dev \
     zip unzip git curl \
-    && docker-php-ext-install pdo pdo_mysql zip mbstring exif pcntl bcmath
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install \
+        pdo pdo_mysql zip mbstring exif pcntl bcmath \
+        curl xml ctype fileinfo tokenizer intl gd
 
 RUN a2enmod rewrite headers
 
