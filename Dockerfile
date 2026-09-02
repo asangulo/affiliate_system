@@ -7,12 +7,15 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
+    libzip-dev \
     git \
     unzip \
     && docker-php-ext-configure gd \
         --with-freetype \
         --with-jpeg \
-    && docker-php-ext-install gd \
+    && docker-php-ext-install \
+        gd \
+        zip \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -25,7 +28,7 @@ RUN composer install \
     --no-dev \
     --optimize-autoloader \
     --no-scripts
-
+    
 # =========================================================
 # ETAPA 2: Compilar frontend (Vue + Vite)
 # =========================================================
@@ -40,7 +43,7 @@ RUN if [ -f package-lock.json ]; then \
     else \
         npm install --legacy-peer-deps; \
     fi
-    
+
 COPY --from=composer /app/vendor ./vendor
 
 COPY resources ./resources
