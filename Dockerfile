@@ -1,13 +1,35 @@
 # =========================================================
-# ETAPA 1: Compilar frontend (Vue + Vite)
+# ETAPA 1: Instalar dependencias PHP
 # =========================================================
-FROM node:20-alpine AS frontend
+FROM composer:2 AS composer
+
+WORKDIR /app
+
+COPY composer.json composer.lock ./
+
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-scripts
+
+
+# =========================================================
+# ETAPA 2: Compilar frontend (Vue + Vite)
+# =========================================================
+FROM node:22-alpine AS frontend
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN if [ -f package-lock.json ]; then npm ci --legacy-peer-deps; else npm install --legacy-peer-deps; fi
+RUN if [ -f package-lock.json ]; then \
+        npm ci --legacy-peer-deps; \
+    else \
+        npm install --legacy-peer-deps; \
+    fi
+
+# Necesario para Ziggy
+COPY --from=composer /app/vendor ./vendor
 
 COPY resources ./resources
 COPY public ./public
@@ -19,7 +41,7 @@ RUN npm run build
 
 
 # =========================================================
-# ETAPA 2: Laravel + Apache
+# ETAPA 3: Laravel + Apache
 # =========================================================
 FROM php:8.2-apache
 
