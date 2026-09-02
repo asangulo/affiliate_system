@@ -12,12 +12,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
 
+         // Confiar en el proxy de Render para detectar HTTPS
+        $middleware->trustProxies(at: '*');
+
         // ── Middleware del grupo web (Inertia + assets) ──
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
-            // ⚠️ CheckUserIsActive NO va aquí todavía
-            // Se agrega después de verificar que la migración is_active corrió
         ]);
 
         // ── Aliases para usar en rutas ──
