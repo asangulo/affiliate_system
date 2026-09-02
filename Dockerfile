@@ -1,22 +1,20 @@
 # =========================================================
 # ETAPA 1: Compilar frontend (Vue + Vite)
 # =========================================================
-FROM node:22-alpine AS frontend
+FROM node:20-alpine AS frontend
 
 WORKDIR /app
 
-# Copiar archivos de npm
 COPY package*.json ./
 
-# Si existe package-lock.json, instala exactamente esas versiones
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+RUN if [ -f package-lock.json ]; then npm ci --legacy-peer-deps; else npm install --legacy-peer-deps; fi
 
-# Copiar archivos necesarios para Vite
 COPY resources ./resources
 COPY public ./public
 COPY vite.config.js ./
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
 
-# Compilar Vue/Vite
 RUN npm run build
 
 
@@ -25,7 +23,6 @@ RUN npm run build
 # =========================================================
 FROM php:8.2-apache
 
-# Dependencias PHP
 RUN apt-get update && apt-get install -y \
     libzip-dev \
     libpng-dev \
@@ -54,17 +51,11 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Apache
 RUN a2enmod rewrite headers
 
-# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
-
-# =========================================================
-# Composer
-# =========================================================
 
 COPY composer.json composer.lock ./
 
@@ -73,40 +64,18 @@ RUN composer install \
     --optimize-autoloader \
     --no-scripts
 
-# =========================================================
-# Copiar Laravel
-# =========================================================
-
 COPY . .
-
-# =========================================================
-# Copiar frontend compilado desde Node
-# =========================================================
 
 COPY --from=frontend /app/public/build ./public/build
 
-# =========================================================
-# Autoload Laravel
-# =========================================================
-
 RUN composer dump-autoload --optimize
-
-# =========================================================
-# Apache -> public/
-# =========================================================
 
 RUN sed -i \
     's!/var/www/html!/var/www/html/public!g' \
     /etc/apache2/sites-available/000-default.conf
 
-RUN echo '<Directory /var/www/html/public>\n\
-    AllowOverride All\n\
-    Require all granted\n\
-</Directory>' >> /etc/apache2/apache2.conf
-
-# =========================================================
-# Permisos Laravel
-# =========================================================
+RUN printf '<Directory /var/www/html/public>\n    AllowOverride All\n    Require all granted\n</Directory>\n' \
+    >> /etc/apache2/apache2.conf
 
 RUN mkdir -p \
     storage/logs \
@@ -117,15 +86,7 @@ RUN mkdir -p \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R ug+rwX storage bootstrap/cache
 
-# =========================================================
-# Puerto
-# =========================================================
-
 EXPOSE 80
-
-# =========================================================
-# Iniciar Laravel
-# =========================================================
 
 CMD php artisan config:cache && \
     php artisan route:cache && \
