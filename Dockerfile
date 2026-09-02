@@ -1,7 +1,21 @@
 # =========================================================
-# ETAPA 1: Instalar dependencias PHP
+# ETAPA 1: Dependencias PHP para Composer
 # =========================================================
-FROM composer:2 AS composer
+FROM php:8.2-cli AS composer
+
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    git \
+    unzip \
+    && docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg \
+    && docker-php-ext-install gd \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
@@ -11,7 +25,6 @@ RUN composer install \
     --no-dev \
     --optimize-autoloader \
     --no-scripts
-
 
 # =========================================================
 # ETAPA 2: Compilar frontend (Vue + Vite)
@@ -27,8 +40,7 @@ RUN if [ -f package-lock.json ]; then \
     else \
         npm install --legacy-peer-deps; \
     fi
-
-# Necesario para Ziggy
+    
 COPY --from=composer /app/vendor ./vendor
 
 COPY resources ./resources
