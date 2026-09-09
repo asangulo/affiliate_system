@@ -45,4 +45,13 @@ class User extends Authenticatable
     {
         $this->update(['is_active' => ! $this->is_active]);
     }
+
+    /**
+     * A dónde debe llegar este usuario tras iniciar sesión, según su rol.
+     * super_admin/empleado usan el panel interno; cliente usa su portal.
+     */
+    public function homeRouteName(): string
+    {
+        return $this->hasAnyRole(['super_admin', 'empleado']) ? 'dashboard' : 'portal.index';
+    }
 }

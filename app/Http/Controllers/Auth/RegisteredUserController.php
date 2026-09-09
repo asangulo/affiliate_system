@@ -42,10 +42,15 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Todo el que se registra por su cuenta entra como cliente.
+        // Un super_admin o empleado puede luego cambiarle el rol y
+        // vincularlo a su afiliación desde Usuarios.
+        $user->assignRole('cliente');
+
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route($user->homeRouteName(), absolute: false));
     }
 }
