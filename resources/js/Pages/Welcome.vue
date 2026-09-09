@@ -511,7 +511,7 @@ const sedes = [
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root {
+.lp {
     --navy:   #0a3d6b;
     --blue:   #1565a8;
     --sky:    #2e8bc0;
@@ -522,9 +522,7 @@ const sedes = [
     --violet: #7c3aed;
     --font:   'DM Sans', sans-serif;
     --serif:  'Playfair Display', serif;
-}
 
-.lp {
     font-family: var(--font);
     color: #1e293b;
     overflow-x: hidden;
