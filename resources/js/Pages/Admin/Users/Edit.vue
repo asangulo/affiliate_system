@@ -24,14 +24,14 @@ const submit = () => form.patch(route('admin.users.update', props.user.id));
     <Head title="Editar Usuario"/>
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Editar Usuario</h2>
+            <h2>Editar Usuario</h2>
+            <p>Actualiza la información de acceso al sistema</p>
         </template>
 
-        <div class="py-8">
-            <div class="uf-wrap">
-                <form @submit.prevent="submit" class="uf-form">
+        <div class="uf-wrap">
+            <form @submit.prevent="submit" class="uf-form">
 
-                    <!-- Sección datos -->
+                <!-- Sección datos -->
                     <div class="uf-section">
                         <div class="uf-section__head">
                             <div class="uf-num">1</div>
@@ -84,7 +84,6 @@ const submit = () => form.patch(route('admin.users.update', props.user.id));
 
                 </form>
             </div>
-        </div>
     </AuthenticatedLayout>
 </template>
 
