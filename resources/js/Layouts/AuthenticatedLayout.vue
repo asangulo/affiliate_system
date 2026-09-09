@@ -1,10 +1,27 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user ?? null);
 const sidebarOpen = ref(false);
+
+// Mensajes flash — se ocultan solos a los 5 segundos
+const flashMessage = ref(null);
+const flashError = ref(null);
+let flashTimer = null;
+
+watch(() => [page.props.flash?.message, page.props.flash?.error], ([message, error]) => {
+    clearTimeout(flashTimer);
+    flashMessage.value = message ?? null;
+    flashError.value = error ?? null;
+    if (message || error) {
+        flashTimer = setTimeout(() => {
+            flashMessage.value = null;
+            flashError.value = null;
+        }, 5000);
+    }
+}, { immediate: true });
 
 // Detectar rol actual
 const isSuperAdmin = computed(() => page.props.auth?.roles?.includes('super_admin') ?? false);
@@ -258,20 +275,22 @@ const isActive = (match) => {
             <!-- Contenido -->
             <main class="hz-content">
                 <!-- Flash messages globales -->
-                <div v-if="$page.props.flash?.message"
-                    class="hz-flash hz-flash--ok">
-                    <svg viewBox="0 0 20 20" fill="currentColor" class="hz-flash__icon">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                    {{ $page.props.flash.message }}
-                </div>
-                <div v-if="$page.props.flash?.error"
-                    class="hz-flash hz-flash--err">
-                    <svg viewBox="0 0 20 20" fill="currentColor" class="hz-flash__icon">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                    </svg>
-                    {{ $page.props.flash.error }}
-                </div>
+                <Transition name="hz-fade">
+                    <div v-if="flashMessage" class="hz-flash hz-flash--ok">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="hz-flash__icon">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        {{ flashMessage }}
+                    </div>
+                </Transition>
+                <Transition name="hz-fade">
+                    <div v-if="flashError" class="hz-flash hz-flash--err">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="hz-flash__icon">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        {{ flashError }}
+                    </div>
+                </Transition>
 
                 <slot/>
             </main>
@@ -430,6 +449,9 @@ const isActive = (match) => {
 .hz-flash__icon { width:18px; height:18px; flex-shrink:0; }
 .hz-flash--ok  { background:#d1fae5; border:1px solid #6ee7b7; color:#065f46; }
 .hz-flash--err { background:#fef2f2; border:1px solid #fca5a5; color:#991b1b; }
+
+.hz-fade-enter-active, .hz-fade-leave-active { transition: opacity 0.3s ease; }
+.hz-fade-enter-from, .hz-fade-leave-to { opacity: 0; }
 
 /* Contenido y footer */
 .hz-content { flex:1; min-width:0; padding:22px 28px 28px; }

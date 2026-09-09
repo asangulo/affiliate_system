@@ -59,14 +59,6 @@ const roleLabel = (roleName) => ({
 
         <div class="adm">
 
-            <!-- Flash -->
-            <div v-if="$page.props.flash?.message" class="adm-flash adm-flash--ok">
-                {{ $page.props.flash.message }}
-            </div>
-            <div v-if="$page.props.flash?.error" class="adm-flash adm-flash--err">
-                {{ $page.props.flash.error }}
-            </div>
-
             <div class="adm-card">
 
                 <!-- Barra de herramientas -->
@@ -220,11 +212,6 @@ const roleLabel = (roleName) => ({
 *, *::before, *::after { box-sizing: border-box; }
 
 .adm { display: flex; flex-direction: column; gap: 20px; font-family: 'DM Sans', sans-serif; }
-
-/* Flash */
-.adm-flash { padding: 12px 16px; border-radius: 10px; font-size: 0.88rem; font-weight: 500; }
-.adm-flash--ok  { background: #d1fae5; border: 1px solid #6ee7b7; color: #065f46; }
-.adm-flash--err { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
 
 /* Card */
 .adm-card {

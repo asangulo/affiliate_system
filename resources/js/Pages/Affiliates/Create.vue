@@ -59,11 +59,6 @@ const submit = () => {
 
         <div class="af-form-wrap">
 
-            <!-- Alerta de error general -->
-            <div v-if="$page.props.flash?.error" class="af-alert af-alert--error">
-                {{ $page.props.flash.error }}
-            </div>
-
             <form @submit.prevent="submit" class="af-form">
 
                 <!-- ══ SECCIÓN 1: DATOS PERSONALES ══ -->
@@ -283,15 +278,6 @@ const submit = () => {
     margin: 0 auto;
     font-family: 'DM Sans', sans-serif;
 }
-
-.af-alert {
-    border-radius: 10px;
-    padding: 12px 16px;
-    font-size: 0.88rem;
-    margin-bottom: 20px;
-    font-weight: 500;
-}
-.af-alert--error { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
 
 .af-form { display: flex; flex-direction: column; gap: 24px; }
 

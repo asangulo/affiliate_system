@@ -16,15 +16,12 @@ defineProps({
 </script>
 
 <template>
-    <Head title="Profile" />
+    <Head title="Mi Perfil" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2
-                class="text-xl font-semibold leading-tight text-gray-800"
-            >
-                Profile
-            </h2>
+            <h2>Mi Perfil</h2>
+            <p>Administra la información de tu cuenta</p>
         </template>
 
         <div class="py-12">

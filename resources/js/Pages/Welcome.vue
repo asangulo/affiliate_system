@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 
 defineProps({
@@ -23,6 +23,23 @@ const submitContact = () => {
         onSuccess: () => contactForm.reset(),
     });
 };
+
+// Mensajes flash — se ocultan solos a los 5 segundos
+const flashMessage = ref(null);
+const flashError = ref(null);
+let flashTimer = null;
+
+watch(() => [page.props.flash?.message, page.props.flash?.error], ([message, error]) => {
+    clearTimeout(flashTimer);
+    flashMessage.value = message ?? null;
+    flashError.value = error ?? null;
+    if (message || error) {
+        flashTimer = setTimeout(() => {
+            flashMessage.value = null;
+            flashError.value = null;
+        }, 5000);
+    }
+}, { immediate: true });
 
 const planes = [
     {
@@ -434,12 +451,16 @@ const sedes = [
                 <div class="lp-contacto__form">
                     <h3 class="lp-contacto__form-title">Envíanos un mensaje</h3>
 
-                    <div v-if="page.props.flash?.message" class="lp-cform__flash lp-cform__flash--ok">
-                        {{ page.props.flash.message }}
-                    </div>
-                    <div v-if="page.props.flash?.error" class="lp-cform__flash lp-cform__flash--err">
-                        {{ page.props.flash.error }}
-                    </div>
+                    <Transition name="lp-fade">
+                        <div v-if="flashMessage" class="lp-cform__flash lp-cform__flash--ok">
+                            {{ flashMessage }}
+                        </div>
+                    </Transition>
+                    <Transition name="lp-fade">
+                        <div v-if="flashError" class="lp-cform__flash lp-cform__flash--err">
+                            {{ flashError }}
+                        </div>
+                    </Transition>
 
                     <form class="lp-cform" @submit.prevent="submitContact">
                         <div class="lp-cform__row">
@@ -1337,6 +1358,9 @@ const sedes = [
 }
 .lp-cform__flash--ok  { background: #d1fae5; border: 1px solid #6ee7b7; color: #065f46; }
 .lp-cform__flash--err { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+
+.lp-fade-enter-active, .lp-fade-leave-active { transition: opacity 0.3s ease; }
+.lp-fade-enter-from, .lp-fade-leave-to { opacity: 0; }
 
 /* ── FOOTER ── */
 .lp-footer {

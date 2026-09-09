@@ -138,7 +138,7 @@ class AffiliateController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('affiliates.show', $affiliate)
+                ->route('affiliates.index')
                 ->with('message', "Afiliado {$affiliate->full_name} registrado con éxito.");
 
         } catch (\Throwable $e) {
@@ -149,11 +149,11 @@ class AffiliateController extends Controller
     }
 
     // ── SHOW ──────────────────────────────────────────────────
+    // No hay una página de detalle dedicada: el listado ya muestra
+    // el detalle completo de cada afiliado en un modal ("Ver").
     public function show(Affiliate $affiliate)
     {
-        return Inertia::render('Affiliates/Show', [
-            'affiliate' => $affiliate->load(['branch', 'plan', 'beneficiaries']),
-        ]);
+        return redirect()->route('affiliates.index');
     }
 
     // ── EDIT ──────────────────────────────────────────────────
