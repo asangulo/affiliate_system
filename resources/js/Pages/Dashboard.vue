@@ -276,9 +276,6 @@ const accesos = [
     font-size: 0.9rem;
     font-weight: 700;
     color: #fff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .qa__desc {
@@ -357,5 +354,9 @@ const accesos = [
     .db-quick { grid-template-columns: 1fr 1fr; }
     .db-empresa { flex-wrap: wrap; }
     .db-banner__sun { display: none; }
+}
+
+@media (max-width: 480px) {
+    .db-quick { grid-template-columns: 1fr; }
 }
 </style>

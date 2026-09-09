@@ -23,37 +23,65 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // ══════════════════════════════════════════════════════
         //  PERMISOS
+        //  Nombres en español legible (se muestran tal cual en
+        //  Roles y Permisos). El mapeo "antiguo → nuevo" permite
+        //  renombrar los permisos ya sembrados con la notación
+        //  anterior (affiliates.view, etc.) sin duplicarlos.
         // ══════════════════════════════════════════════════════
 
         $permissions = [
             // Afiliados
-            'affiliates.view',
-            'affiliates.create',
-            'affiliates.edit',
-            'affiliates.toggle_status',
-            'affiliates.import',
+            'affiliates.view'          => 'Ver afiliados',
+            'affiliates.create'        => 'Crear afiliados',
+            'affiliates.edit'          => 'Editar afiliados',
+            'affiliates.toggle_status' => 'Activar o inactivar afiliados',
+            'affiliates.import'        => 'Importar afiliados',
 
             // Beneficiarios
-            'beneficiaries.view',
-            'beneficiaries.create',
-            'beneficiaries.edit',
+            'beneficiaries.view'   => 'Ver beneficiarios',
+            'beneficiaries.create' => 'Crear beneficiarios',
+            'beneficiaries.edit'   => 'Editar beneficiarios',
 
             // Usuarios (admin)
-            'users.view',
-            'users.create',
-            'users.edit',
-            'users.toggle_status',
-            'users.assign_role',
+            'users.view'          => 'Ver usuarios',
+            'users.create'        => 'Crear usuarios',
+            'users.edit'          => 'Editar usuarios',
+            'users.toggle_status' => 'Activar o inactivar usuarios',
+            'users.assign_role'   => 'Asignar roles',
 
             // Roles
-            'roles.view',
+            'roles.view' => 'Ver roles y permisos',
 
             // Portal cliente
-            'portal.view',
+            'portal.view' => 'Ver portal del cliente',
+
+            // Sedes
+            'branches.view'   => 'Ver sedes',
+            'branches.create' => 'Crear sedes',
+            'branches.edit'   => 'Editar sedes',
+            'branches.delete' => 'Eliminar sedes',
+
+            // Pagos
+            'payments.view'     => 'Ver pagos',
+            'payments.register' => 'Registrar pagos',
+            'payments.void'     => 'Anular pagos',
+            'payments.view_own' => 'Ver mis pagos',
+
+            // Historial
+            'activity.view' => 'Ver historial',
+
+            // Reportes
+            'reports.view' => 'Ver reportes',
         ];
 
-        foreach ($permissions as $perm) {
-            Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
+        foreach ($permissions as $anterior => $nuevo) {
+            $existente = Permission::where('name', $anterior)->where('guard_name', 'web')->first();
+
+            if ($existente) {
+                $existente->update(['name' => $nuevo]);
+            } else {
+                Permission::firstOrCreate(['name' => $nuevo, 'guard_name' => 'web']);
+            }
         }
 
         // ══════════════════════════════════════════════════════
@@ -67,19 +95,24 @@ class RolesAndPermissionsSeeder extends Seeder
         // EMPLEADO — gestión de afiliados, sin admin de usuarios/roles
         $empleado = Role::firstOrCreate(['name' => 'empleado', 'guard_name' => 'web']);
         $empleado->syncPermissions([
-            'affiliates.view',
-            'affiliates.create',
-            'affiliates.edit',
-            'affiliates.import',
-            'beneficiaries.view',
-            'beneficiaries.create',
-            'beneficiaries.edit',
+            'Ver afiliados',
+            'Crear afiliados',
+            'Editar afiliados',
+            'Importar afiliados',
+            'Ver beneficiarios',
+            'Crear beneficiarios',
+            'Editar beneficiarios',
+            'Ver pagos',
+            'Registrar pagos',
+            'Anular pagos',
+            'Ver reportes',
         ]);
 
         // CLIENTE — solo ve su portal personal
         $cliente = Role::firstOrCreate(['name' => 'cliente', 'guard_name' => 'web']);
         $cliente->syncPermissions([
-            'portal.view',
+            'Ver portal del cliente',
+            'Ver mis pagos',
         ]);
 
         // ══════════════════════════════════════════════════════

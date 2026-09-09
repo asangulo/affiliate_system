@@ -4,6 +4,11 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AffiliateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\BranchController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -17,6 +22,10 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
     ]);
 });
+
+Route::post('/contacto', [ContactController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('contact.store');
 
 // ══════════════════════════════════════════════
 //  RUTAS AUTENTICADAS — PERFIL
@@ -33,6 +42,13 @@ Route::middleware('auth')->group(function () {
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified', 'role:super_admin|empleado'])->name('dashboard');
+
+// ══════════════════════════════════════════════
+//  MANUAL DE USUARIO — cualquier usuario autenticado
+// ══════════════════════════════════════════════
+Route::get('/manual', function () {
+    return Inertia::render('Manual/Index');
+})->middleware(['auth', 'verified'])->name('manual');
 
 // ══════════════════════════════════════════════
 //  AFILIADOS — super_admin y empleado
@@ -62,8 +78,12 @@ Route::middleware(['auth', 'verified', 'role:super_admin'])->prefix('admin')->na
     Route::patch('/users/{user}',           [UserController::class, 'update'])->name('users.update');
     Route::patch('/users/{user}/toggle',    [UserController::class, 'toggleStatus'])->name('users.toggle');
 
-    // Gestión de roles
-    Route::get('/roles',  [RoleController::class, 'index'])->name('roles.index');
+    // Gestión de roles y permisos
+    Route::get('/roles',                [RoleController::class, 'index'])->name('roles.index');
+    Route::post('/roles',               [RoleController::class, 'storeRole'])->name('roles.store');
+    Route::patch('/roles/{role}',       [RoleController::class, 'updateRole'])->name('roles.update');
+    Route::delete('/roles/{role}',      [RoleController::class, 'destroyRole'])->name('roles.destroy');
+    Route::post('/permissions',         [RoleController::class, 'storePermission'])->name('permissions.store');
 });
 
 // ══════════════════════════════════════════════
@@ -73,6 +93,52 @@ Route::middleware(['auth', 'verified', 'role:cliente'])->prefix('portal')->name(
     Route::get('/', function () {
         return Inertia::render('Portal/Index');
     })->name('index');
+});
+
+// ══════════════════════════════════════════════
+//  SEDES, PAGOS, HISTORIAL, REPORTES
+// ══════════════════════════════════════════════
+Route::middleware(['auth', 'verified'])->group(function () {
+
+    // ── SEDES ────────────────────────────────────────────────
+    Route::middleware('role:super_admin')->group(function () {
+        Route::get('/sedes',                [BranchController::class, 'index'])->name('branches.index');
+        Route::get('/sedes/crear',          [BranchController::class, 'create'])->name('branches.create');
+        Route::post('/sedes',               [BranchController::class, 'store'])->name('branches.store');
+        Route::get('/sedes/{branch}/editar',[BranchController::class, 'edit'])->name('branches.edit');
+        Route::put('/sedes/{branch}',       [BranchController::class, 'update'])->name('branches.update');
+        Route::delete('/sedes/{branch}',    [BranchController::class, 'destroy'])->name('branches.destroy');
+        Route::patch('/sedes/{branch}/estado', [BranchController::class, 'toggle'])->name('branches.toggle');
+    });
+
+    // ── PAGOS (personal interno) ─────────────────────────────
+    Route::middleware('role:super_admin|empleado')->group(function () {
+        Route::get('/pagos',                    [PaymentController::class, 'index'])->name('payments.index');
+        Route::get('/pagos/cartera',            [PaymentController::class, 'portfolio'])->name('payments.portfolio');
+        Route::get('/pagos/registrar',          [PaymentController::class, 'create'])->name('payments.create');
+        Route::post('/pagos',                   [PaymentController::class, 'store'])->name('payments.store');
+        Route::post('/pagos/multiple',          [PaymentController::class, 'storeBulk'])->name('payments.storeBulk');
+        Route::delete('/pagos/{payment}',       [PaymentController::class, 'destroy'])->name('payments.destroy');
+        Route::get('/pagos/afiliado/{affiliate}', [PaymentController::class, 'showAffiliate'])->name('payments.affiliate');
+    });
+
+    // ── MIS PAGOS (cliente) ──────────────────────────────────
+    Route::get('/mis-pagos', [PaymentController::class, 'myPayments'])->name('payments.mine');
+
+    // ── HISTORIAL ────────────────────────────────────────────
+    Route::middleware('role:super_admin')->group(function () {
+        Route::get('/historial',           [ActivityLogController::class, 'index'])->name('activity.index');
+        Route::delete('/historial/limpiar',[ActivityLogController::class, 'prune'])->name('activity.prune');
+    });
+
+    Route::get('/historial/{type}/{id}', [ActivityLogController::class, 'forSubject'])
+         ->name('activity.subject');
+
+    // ── REPORTES ─────────────────────────────────────────────
+    Route::middleware('role:super_admin|empleado')->group(function () {
+        Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
+    });
+
 });
 
 require __DIR__.'/auth.php';

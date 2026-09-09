@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 
 defineProps({
     canLogin: { type: Boolean },
@@ -8,6 +8,21 @@ defineProps({
 });
 
 const menuOpen = ref(false);
+const page = usePage();
+
+const contactForm = useForm({
+    nombre: '',
+    telefono: '',
+    correo: '',
+    mensaje: '',
+});
+
+const submitContact = () => {
+    contactForm.post(route('contact.store'), {
+        preserveScroll: true,
+        onSuccess: () => contactForm.reset(),
+    });
+};
 
 const planes = [
     {
@@ -55,13 +70,47 @@ const planes = [
         ],
         destacado: false,
     },
+    {
+        name: 'Plan Preferencial',
+        precio: null,
+        periodo: '',
+        color: 'plan--violeta',
+        descripcion: 'Dos modalidades a tu medida: cerrado para una persona específica, o abierto con libre elección de beneficiario.',
+        beneficios: [
+            'Plan Cerrado: cobertura para 1 persona específica',
+            'Plan Abierto: libre elección de beneficiario',
+            'Incluye toda la cobertura del servicio exequial',
+            'Auxilio económico incluido',
+        ],
+        destacado: false,
+    },
+];
+
+const servicios = [
+    { icon: '🚑', titulo: 'Servicio nacional', desc: 'Cobertura y traslado a nivel nacional en toda Colombia.' },
+    { icon: '🕯️', titulo: 'Salas de velación', desc: 'Salas de velación y cofre fúnebre incluidos en el servicio.' },
+    { icon: '💐', titulo: 'Arreglo floral y carroza', desc: 'Arreglo floral y carroza fúnebre para el servicio exequial.' },
+    { icon: '💰', titulo: 'Auxilio económico', desc: 'Apoyo económico para la familia en el momento de la pérdida.' },
+    { icon: '⛪', titulo: 'Misa de año y osario', desc: 'Acompañamiento espiritual con misa de año y osario incluidos.' },
+    { icon: '🐾', titulo: 'Servicio para mascotas', desc: 'Servicio exequial también disponible para tus mascotas.' },
+    { icon: '🤍', titulo: 'Afiliación sin límites', desc: 'Afiliamos sin límite de edad, incluso a personas con enfermedades terminales.' },
+    { icon: '⚰️', titulo: 'Cementerios distritales y privados', desc: 'Cobertura en cementerios distritales y privados.' },
+    { icon: '📞', titulo: 'Atención 24/7', desc: 'Línea de atención al cliente disponible las 24 horas, todos los días.' },
 ];
 
 const valores = [
     { icon: '🕊️', titulo: 'Dignidad', desc: 'Cada servicio se presta con el más alto respeto y dignidad hacia nuestros afiliados y sus familias.' },
-    { icon: '🤝', titulo: 'Compromiso', desc: 'Más de 20 años acompañando a las familias del Huila en los momentos más difíciles.' },
+    { icon: '🤝', titulo: 'Compromiso', desc: 'Acompañando a las familias de Cundinamarca en los momentos más difíciles.' },
     { icon: '❤️', titulo: 'Calidez', desc: 'Un equipo humano dedicado a ofrecer consuelo, apoyo y orientación en cada momento.' },
     { icon: '⭐', titulo: 'Calidad', desc: 'Instalaciones modernas y personal altamente capacitado para brindarte el mejor servicio.' },
+];
+
+const sedes = [
+    { ciudad: 'Fusagasugá', direccion: 'Cra 7 No. 4 - 56 Centro', telefono: '302 434 9604' },
+    { ciudad: 'Cabrera (Cund.)', direccion: 'Cra 3 No. 6 - 66 Centro', telefono: '310 397 9444' },
+    { ciudad: 'Pandi (Cund.)', direccion: 'Avenida 3 No. 04 - 30 Centro', telefono: '310 397 9444' },
+    { ciudad: 'Granada (Cund.)', direccion: 'Calle 10 No. -13 - 20 Centro', telefono: '313 472 5187' },
+    { ciudad: 'Venecia (Cund.)', direccion: 'Calle 4 No. 2A - 03 Buena Vista', telefono: '313 472 5187' },
 ];
 </script>
 
@@ -98,6 +147,7 @@ const valores = [
                 <div class="lp-nav__links">
                     <a href="#nosotros" class="lp-nav__a">Nosotros</a>
                     <a href="#planes" class="lp-nav__a">Planes</a>
+                    <a href="#servicios" class="lp-nav__a">Servicios</a>
                     <a href="#valores" class="lp-nav__a">Valores</a>
                     <a href="#contacto" class="lp-nav__a">Contacto</a>
                 </div>
@@ -121,6 +171,7 @@ const valores = [
             <div class="lp-mobile-menu" :class="{ 'lp-mobile-menu--open': menuOpen }">
                 <a href="#nosotros" class="lp-mobile-menu__a" @click="menuOpen=false">Nosotros</a>
                 <a href="#planes" class="lp-mobile-menu__a" @click="menuOpen=false">Planes</a>
+                <a href="#servicios" class="lp-mobile-menu__a" @click="menuOpen=false">Servicios</a>
                 <a href="#valores" class="lp-mobile-menu__a" @click="menuOpen=false">Valores</a>
                 <a href="#contacto" class="lp-mobile-menu__a" @click="menuOpen=false">Contacto</a>
                 <div class="lp-mobile-menu__cta">
@@ -264,8 +315,9 @@ const valores = [
                         <div class="lp-plan__header">
                             <h3 class="lp-plan__name">{{ plan.name }}</h3>
                             <div class="lp-plan__price">
-                                <span class="lp-plan__amount">{{ plan.precio }}</span>
-                                <span class="lp-plan__period">{{ plan.periodo }}</span>
+                                <span v-if="plan.precio" class="lp-plan__amount">{{ plan.precio }}</span>
+                                <span v-if="plan.precio" class="lp-plan__period">{{ plan.periodo }}</span>
+                                <span v-else class="lp-plan__cotiza">Cotiza con un asesor</span>
                             </div>
                             <p class="lp-plan__desc">{{ plan.descripcion }}</p>
                         </div>
@@ -280,6 +332,24 @@ const valores = [
                         <Link :href="canRegister ? route('register') : route('login')" class="lp-plan__cta">
                             Quiero este plan
                         </Link>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════ SERVICIOS ════════════ -->
+        <section class="lp-section lp-servicios" id="servicios">
+            <div class="lp-container">
+                <div class="lp-section-header">
+                    <span class="lp-label">Cobertura del servicio</span>
+                    <h2 class="lp-h2">Todo lo que necesitas<br>en un solo servicio</h2>
+                    <p class="lp-p lp-p--center">Nuestra afiliación incluye estos servicios y coberturas para acompañarte en cada momento.</p>
+                </div>
+                <div class="lp-servicios__grid">
+                    <div v-for="s in servicios" :key="s.titulo" class="lp-valor lp-valor--claro">
+                        <div class="lp-valor__icon">{{ s.icon }}</div>
+                        <h3 class="lp-valor__title lp-valor__title--oscuro">{{ s.titulo }}</h3>
+                        <p class="lp-valor__desc lp-valor__desc--oscuro">{{ s.desc }}</p>
                     </div>
                 </div>
             </div>
@@ -331,21 +401,24 @@ const valores = [
                             <div class="lp-contacto__ico">📞</div>
                             <div>
                                 <p class="lp-contacto__item-title">Teléfono</p>
-                                <p class="lp-contacto__item-val">+57 (8) 000-0000</p>
+                                <p class="lp-contacto__item-val">302 434 9604</p>
+                                <p class="lp-contacto__item-note">También: 310 397 9444 · 313 472 5187</p>
                             </div>
                         </div>
                         <div class="lp-contacto__item">
                             <div class="lp-contacto__ico">📧</div>
                             <div>
                                 <p class="lp-contacto__item-title">Correo</p>
-                                <p class="lp-contacto__item-val">info@horizonte.com.co</p>
+                                <p class="lp-contacto__item-val">horizontepreexequialessas@gmail.com</p>
                             </div>
                         </div>
                         <div class="lp-contacto__item">
                             <div class="lp-contacto__ico">📍</div>
                             <div>
-                                <p class="lp-contacto__item-title">Dirección</p>
-                                <p class="lp-contacto__item-val">Neiva, Huila, Colombia</p>
+                                <p class="lp-contacto__item-title">Nuestras sedes</p>
+                                <p v-for="s in sedes" :key="s.ciudad" class="lp-contacto__item-val">
+                                    {{ s.ciudad }} — {{ s.direccion }}
+                                </p>
                             </div>
                         </div>
                         <div class="lp-contacto__item">
@@ -360,27 +433,40 @@ const valores = [
 
                 <div class="lp-contacto__form">
                     <h3 class="lp-contacto__form-title">Envíanos un mensaje</h3>
-                    <div class="lp-cform">
+
+                    <div v-if="page.props.flash?.message" class="lp-cform__flash lp-cform__flash--ok">
+                        {{ page.props.flash.message }}
+                    </div>
+                    <div v-if="page.props.flash?.error" class="lp-cform__flash lp-cform__flash--err">
+                        {{ page.props.flash.error }}
+                    </div>
+
+                    <form class="lp-cform" @submit.prevent="submitContact">
                         <div class="lp-cform__row">
                             <div class="lp-cform__field">
                                 <label class="lp-cform__label">Nombre</label>
-                                <input type="text" placeholder="Tu nombre completo" class="lp-cform__input"/>
+                                <input v-model="contactForm.nombre" type="text" placeholder="Tu nombre completo" class="lp-cform__input"/>
+                                <span v-if="contactForm.errors.nombre" class="lp-cform__error">{{ contactForm.errors.nombre }}</span>
                             </div>
                             <div class="lp-cform__field">
                                 <label class="lp-cform__label">Teléfono</label>
-                                <input type="tel" placeholder="Tu número de contacto" class="lp-cform__input"/>
+                                <input v-model="contactForm.telefono" type="tel" placeholder="Tu número de contacto" class="lp-cform__input"/>
                             </div>
                         </div>
                         <div class="lp-cform__field">
                             <label class="lp-cform__label">Correo electrónico</label>
-                            <input type="email" placeholder="tu@correo.com" class="lp-cform__input"/>
+                            <input v-model="contactForm.correo" type="email" placeholder="tu@correo.com" class="lp-cform__input"/>
+                            <span v-if="contactForm.errors.correo" class="lp-cform__error">{{ contactForm.errors.correo }}</span>
                         </div>
                         <div class="lp-cform__field">
                             <label class="lp-cform__label">Mensaje</label>
-                            <textarea rows="4" placeholder="¿En qué podemos ayudarte?" class="lp-cform__input lp-cform__textarea"></textarea>
+                            <textarea v-model="contactForm.mensaje" rows="4" placeholder="¿En qué podemos ayudarte?" class="lp-cform__input lp-cform__textarea"></textarea>
+                            <span v-if="contactForm.errors.mensaje" class="lp-cform__error">{{ contactForm.errors.mensaje }}</span>
                         </div>
-                        <button class="lp-cform__btn">Enviar mensaje</button>
-                    </div>
+                        <button type="submit" class="lp-cform__btn" :disabled="contactForm.processing">
+                            {{ contactForm.processing ? 'Enviando...' : 'Enviar mensaje' }}
+                        </button>
+                    </form>
                 </div>
             </div>
         </section>
@@ -408,7 +494,7 @@ const valores = [
                     </div>
                 </div>
                 <p class="lp-footer__copy">
-                    &copy; {{ new Date().getFullYear() }} Horizonte S.A.S Pre Exequiales · Todos los derechos reservados
+                    &copy; {{ new Date().getFullYear() }} Horizonte S.A.S Pre Exequiales · NIT 901390749-8 · Todos los derechos reservados
                 </p>
                 <div class="lp-footer__links">
                     <Link v-if="canLogin" :href="route('login')" class="lp-footer__a">Iniciar sesión</Link>
@@ -433,6 +519,7 @@ const valores = [
     --dkgreen:#1a6b2a;
     --gold:   #f5a623;
     --gold-lt:#ffe066;
+    --violet: #7c3aed;
     --font:   'DM Sans', sans-serif;
     --serif:  'Playfair Display', serif;
 }
@@ -905,7 +992,7 @@ const valores = [
 
 .lp-planes__grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 22px;
 }
 
@@ -970,11 +1057,21 @@ const valores = [
     font-weight: 700;
 }
 
-.lp-plan--sky   .lp-plan__amount { color: var(--blue); }
-.lp-plan--green .lp-plan__amount { color: var(--green); }
-.lp-plan--gold  .lp-plan__amount { color: #b45309; }
+.lp-plan--sky     .lp-plan__amount { color: var(--blue); }
+.lp-plan--green   .lp-plan__amount { color: var(--green); }
+.lp-plan--gold    .lp-plan__amount { color: #b45309; }
+.lp-plan--violeta .lp-plan__amount { color: var(--violet); }
 
 .lp-plan__period { font-size: 0.82rem; color: #64748b; }
+
+.lp-plan__cotiza {
+    display: inline-block;
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--violet);
+    padding: 8px 0;
+}
 
 .lp-plan__desc { font-size: 0.82rem; color: #64748b; }
 
@@ -997,9 +1094,10 @@ const valores = [
 
 .lp-plan__check { width: 17px; height: 17px; flex-shrink: 0; margin-top: 1px; }
 
-.lp-plan--sky   .lp-plan__check { color: var(--blue); }
-.lp-plan--green .lp-plan__check { color: var(--green); }
-.lp-plan--gold  .lp-plan__check { color: #d97706; }
+.lp-plan--sky     .lp-plan__check { color: var(--blue); }
+.lp-plan--green   .lp-plan__check { color: var(--green); }
+.lp-plan--gold    .lp-plan__check { color: #d97706; }
+.lp-plan--violeta .lp-plan__check { color: var(--violet); }
 
 .lp-plan__cta {
     display: block;
@@ -1013,11 +1111,31 @@ const valores = [
     font-family: var(--font);
 }
 
-.lp-plan--sky   .lp-plan__cta { background: linear-gradient(135deg, var(--navy), var(--blue)); color: #fff; }
-.lp-plan--green .lp-plan__cta { background: linear-gradient(135deg, var(--dkgreen), var(--green)); color: #fff; }
-.lp-plan--gold  .lp-plan__cta { background: linear-gradient(135deg, #92400e, #d97706); color: #fff; }
+.lp-plan--sky     .lp-plan__cta { background: linear-gradient(135deg, var(--navy), var(--blue)); color: #fff; }
+.lp-plan--green   .lp-plan__cta { background: linear-gradient(135deg, var(--dkgreen), var(--green)); color: #fff; }
+.lp-plan--gold    .lp-plan__cta { background: linear-gradient(135deg, #92400e, #d97706); color: #fff; }
+.lp-plan--violeta .lp-plan__cta { background: linear-gradient(135deg, #5b21b6, var(--violet)); color: #fff; }
 
 .lp-plan__cta:hover { opacity: 0.88; transform: translateY(-1px); }
+
+/* ── SERVICIOS ── */
+.lp-servicios { background: #fff; }
+
+.lp-servicios__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 20px;
+}
+
+.lp-valor--claro {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.lp-valor--claro:hover { background: #f0f4f8; }
+
+.lp-valor--claro .lp-valor__title--oscuro { color: var(--navy); }
+.lp-valor--claro .lp-valor__desc--oscuro { color: #64748b; }
 
 /* ── VALORES ── */
 .lp-valores {
@@ -1062,7 +1180,7 @@ const valores = [
 .lp-valor__title {
     font-family: var(--serif);
     font-size: 1.1rem;
-    color: var(--gold-lt);
+    color: #ffffff;
     font-weight: 600;
     margin-bottom: 10px;
 }
@@ -1153,6 +1271,7 @@ const valores = [
 
 .lp-contacto__item-title { font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
 .lp-contacto__item-val   { font-size: 0.9rem; color: #1e293b; font-weight: 500; }
+.lp-contacto__item-note  { font-size: 0.78rem; color: #94a3b8; margin-top: 2px; }
 
 .lp-contacto__form { background: #f8fafc; border-radius: 18px; padding: 32px 28px; border: 1.5px solid #e2e8f0; }
 
@@ -1207,6 +1326,19 @@ const valores = [
 }
 
 .lp-cform__btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.lp-cform__btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.lp-cform__error { font-size: 0.75rem; color: #dc2626; }
+
+.lp-cform__flash {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+.lp-cform__flash--ok  { background: #d1fae5; border: 1px solid #6ee7b7; color: #065f46; }
+.lp-cform__flash--err { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
 
 /* ── FOOTER ── */
 .lp-footer {
@@ -1260,6 +1392,7 @@ const valores = [
 @media (max-width: 1024px) {
     .lp-planes__grid   { grid-template-columns: 1fr 1fr; }
     .lp-valores__grid  { grid-template-columns: repeat(2, 1fr); }
+    .lp-servicios__grid { grid-template-columns: repeat(2, 1fr); }
     .lp-about__grid    { grid-template-columns: 1fr; gap: 36px; }
     .lp-about__visual  { order: -1; }
     .lp-contacto__grid { grid-template-columns: 1fr; gap: 40px; }

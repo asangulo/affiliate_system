@@ -1,13 +1,8 @@
-<!-- ═══════════════════════════════════════════════════════════
-     Portal/Index.vue
-     Coloca en: resources/js/Pages/Portal/Index.vue
-     ═══════════════════════════════════════════════════════════ -->
 <script setup>
-// Portal del cliente — próxima versión con módulo de pagos
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
- 
+
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
 const affiliate = computed(() => user.value?.affiliate);
@@ -30,8 +25,8 @@ const affiliate = computed(() => user.value?.affiliate);
                 <h3>Tu cuenta aún no está vinculada a un plan</h3>
                 <p>Comunícate con Horizonte S.A.S para que un asesor vincule tu afiliación a esta cuenta.</p>
                 <div class="portal-empty__contact">
-                    <p>📞 +57 (8) 000-0000</p>
-                    <p>📧 info@horizonte.com.co</p>
+                    <p>📞 302 434 9604</p>
+                    <p>📧 horizontepreexequialessas@gmail.com</p>
                 </div>
             </div>
  
@@ -108,14 +103,14 @@ const affiliate = computed(() => user.value?.affiliate);
                     <p v-else class="portal-empty-text">No hay beneficiarios registrados.</p>
                 </div>
  
-                <!-- Próxima versión -->
-                <div class="portal-coming">
-                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+                <!-- Enlace a Mis Pagos -->
+                <Link :href="route('payments.mine')" class="portal-coming">
+                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zm14 5H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>
                     <div>
-                        <p class="portal-coming__title">Módulo de pagos — Próximamente</p>
-                        <p class="portal-coming__sub">Pronto podrás consultar tu historial de pagos, fechas de vencimiento y estado de paz y salvo.</p>
+                        <p class="portal-coming__title">Consulta tus pagos</p>
+                        <p class="portal-coming__sub">Revisa tu historial de pagos, cuotas pendientes y próxima fecha de vencimiento.</p>
                     </div>
-                </div>
+                </Link>
             </template>
         </div>
     </AuthenticatedLayout>
@@ -173,10 +168,16 @@ const affiliate = computed(() => user.value?.affiliate);
 .portal-empty-text { font-size:0.84rem; color:#94a3b8; font-style:italic; }
  
 /* Próximamente */
-.portal-coming { display:flex; align-items:flex-start; gap:12px; background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:16px 18px; }
-.portal-coming svg { width:20px; height:20px; color:#d97706; flex-shrink:0; margin-top:2px; }
-.portal-coming__title { font-size:0.88rem; font-weight:700; color:#92400e; margin-bottom:3px; }
-.portal-coming__sub   { font-size:0.8rem; color:#b45309; line-height:1.5; }
+.portal-coming {
+    display:flex; align-items:flex-start; gap:12px;
+    background:#f0fdf4; border:1px solid #86efac; border-radius:12px;
+    padding:16px 18px; text-decoration:none;
+    transition: background 0.18s, transform 0.15s;
+}
+.portal-coming:hover { background:#dcfce7; transform: translateY(-1px); }
+.portal-coming svg { width:20px; height:20px; color:#15803d; flex-shrink:0; margin-top:2px; }
+.portal-coming__title { font-size:0.88rem; font-weight:700; color:#14532d; margin-bottom:3px; }
+.portal-coming__sub   { font-size:0.8rem; color:#166534; line-height:1.5; }
  
 @media (max-width:640px) {
     .portal-cards { grid-template-columns:1fr 1fr; }

@@ -32,6 +32,12 @@ const navLinks = computed(() => {
             match: 'portal',
             icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>`,
         });
+        links.push({
+            label: 'Mis pagos',
+            route: 'payments.mine',
+            match: 'payments.mine',
+            icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 9V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-2M3 9h18"/>`,
+        });
     }
 
     // Afiliados — super_admin y empleado
@@ -48,6 +54,30 @@ const navLinks = computed(() => {
                 route: 'affiliates.create',
                 match: 'affiliates.create',
                 icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>`,
+            }
+        );
+    }
+
+    // Cartera / Pagos / Reportes — super_admin y empleado
+    if (isSuperAdmin.value || isEmpleado.value) {
+        links.push(
+            {
+                label: 'Cartera',
+                route: 'payments.portfolio',
+                match: 'payments.portfolio',
+                icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>`,
+            },
+            {
+                label: 'Pagos',
+                route: 'payments.index',
+                match: 'payments.index',
+                icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2m0-2c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
+            },
+            {
+                label: 'Reportes',
+                route: 'reports.index',
+                match: 'reports.index',
+                icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>`,
             }
         );
     }
@@ -70,6 +100,18 @@ const adminLinks = computed(() => {
             route: 'admin.roles.index',
             match: 'admin.roles',
             icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>`,
+        },
+        {
+            label: 'Sedes',
+            route: 'branches.index',
+            match: 'branches',
+            icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2M5 21h2m0 0h10M7 21V5m10 16V5M9 7h1m-1 4h1m4-4h1m-1 4h1M9 21v-4a1 1 0 011-1h4a1 1 0 011 1v4"/>`,
+        },
+        {
+            label: 'Historial',
+            route: 'activity.index',
+            match: 'activity.index',
+            icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
         },
     ];
 });
@@ -144,6 +186,24 @@ const isActive = (match) => {
                     <svg class="hz-nav__icon" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="1.8" v-html="link.icon"/>
                     <span>{{ link.label }}</span>
+                    <span class="hz-nav__dot"/>
+                </Link>
+            </nav>
+
+            <!-- Ayuda — siempre visible -->
+            <nav class="hz-nav hz-nav--admin">
+                <p class="hz-nav__section">AYUDA</p>
+                <Link
+                    :href="route('manual')"
+                    class="hz-nav__link"
+                    :class="{ 'hz-nav__link--active': isActive('manual') }"
+                    @click="sidebarOpen = false"
+                >
+                    <svg class="hz-nav__icon" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    <span>Manual de Usuario</span>
                     <span class="hz-nav__dot"/>
                 </Link>
             </nav>
@@ -230,6 +290,7 @@ const isActive = (match) => {
 
 .hz-shell {
     display: flex; min-height: 100vh;
+    min-width: 0;
     font-family: 'DM Sans', sans-serif;
     background: #eef2f7;
 }
@@ -327,7 +388,7 @@ const isActive = (match) => {
 .hz-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; backdrop-filter:blur(2px); }
 
 /* ── MAIN ── */
-.hz-main { margin-left:252px; flex:1; display:flex; flex-direction:column; min-height:100vh; }
+.hz-main { margin-left:252px; flex:1; min-width:0; display:flex; flex-direction:column; min-height:100vh; }
 
 .hz-topbar {
     height:60px; background:#fff;
@@ -371,7 +432,7 @@ const isActive = (match) => {
 .hz-flash--err { background:#fef2f2; border:1px solid #fca5a5; color:#991b1b; }
 
 /* Contenido y footer */
-.hz-content { flex:1; padding:22px 28px 28px; }
+.hz-content { flex:1; min-width:0; padding:22px 28px 28px; }
 .hz-footer { text-align:center; font-size:0.72rem; color:#94a3b8; padding:16px 24px; border-top:1px solid #e2e8f0; background:#fff; }
 
 /* ── RESPONSIVE ── */
