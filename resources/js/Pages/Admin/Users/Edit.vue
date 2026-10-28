@@ -47,7 +47,7 @@ const submit = () => form.patch(route('admin.users.update', props.user.id));
                                 <InputError :message="form.errors.name"/>
                             </div>
                             <div class="uf-field">
-                                <label class="uf-label">Email <span class="uf-req">*</span></label>
+                                <label class="uf-label">Correo electrónico <span class="uf-req">*</span></label>
                                 <input v-model="form.email" type="email" class="uf-input" required/>
                                 <InputError :message="form.errors.email"/>
                             </div>

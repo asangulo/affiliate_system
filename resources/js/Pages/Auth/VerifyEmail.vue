@@ -11,7 +11,7 @@ const sent = computed(() => props.status === 'verification-link-sent');
  
 <template>
     <GuestLayout>
-        <Head title="Verificar Email" />
+        <Head title="Verificar correo" />
         <h2 class="hz-form__title">Verificar correo</h2>
         <p class="hz-form__sub">Te enviamos un enlace de verificación. Si no lo recibiste, solicita uno nuevo.</p>
         <div v-if="sent" class="hz-alert hz-alert--success">Se envió un nuevo enlace a tu correo.</div>

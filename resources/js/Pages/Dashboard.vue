@@ -42,11 +42,11 @@ const accesos = [
 </script>
 
 <template>
-    <Head title="Dashboard | Horizonte S.A.S" />
+    <Head title="Panel principal | Horizonte S.A.S" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2>Dashboard</h2>
+            <h2>Panel principal</h2>
             <p>Panel de control · Sistema de Gestión de Afiliados</p>
         </template>
 
