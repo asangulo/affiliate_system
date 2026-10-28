@@ -474,3 +474,25 @@ const isActive = (match) => {
     .hz-content { padding:16px 16px 24px; }
 }
 </style>
+
+<!-- Impresión: sin estilos "scoped" para alcanzar también el contenido de cada página -->
+<style>
+@media print {
+    /* Sin esto el navegador omite los fondos y las barras de las gráficas salen en blanco */
+    .hz-content,
+    .hz-content * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .hz-sidebar,
+    .hz-topbar,
+    .hz-footer,
+    .hz-overlay {
+        display: none !important;
+    }
+
+    .hz-main { margin-left: 0 !important; }
+    .hz-shell { background: #fff; }
+}
+</style>
