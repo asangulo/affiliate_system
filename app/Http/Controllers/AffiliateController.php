@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\HolderChange;
 use App\Models\Plan;
 use App\Models\User;
+use App\Services\PortalAccountService;
 use App\Imports\AffiliatesImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,7 +32,7 @@ class AffiliateController extends Controller
             : 'created_at';
         $sortDirection = $request->input('sort_direction', 'desc') === 'asc' ? 'asc' : 'desc';
 
-        $query = Affiliate::with(['branch', 'plan', 'beneficiaries']);
+        $query = Affiliate::with(['branch', 'plan', 'beneficiaries', 'user:id,affiliate_id,username']);
 
         // Filtro activo/inactivo
         $status = $request->input('status', 'active');
@@ -139,11 +140,14 @@ class AffiliateController extends Controller
                 }
             }
 
+            $cuenta = app(PortalAccountService::class)->ensureFor($affiliate);
+
             DB::commit();
 
             return redirect()
                 ->route('affiliates.index')
-                ->with('message', "Afiliado {$affiliate->full_name} registrado con éxito.");
+                ->with('message', "Afiliado {$affiliate->full_name} registrado con éxito."
+                    . ($cuenta ? " Usuario del portal: {$cuenta->username}." : ''));
 
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -303,7 +307,7 @@ class AffiliateController extends Controller
         ]);
 
         try {
-            DB::transaction(function () use ($affiliate, $validated, $hasSuccessor) {
+            $usuarioNuevo = DB::transaction(function () use ($affiliate, $validated, $hasSuccessor) {
                 $successor = $hasSuccessor
                     ? $affiliate->beneficiaries()->lockForUpdate()->findOrFail($validated['successor_id'])
                     : null;
@@ -342,6 +346,11 @@ class AffiliateController extends Controller
                 // La cuenta del portal era del titular fallecido
                 User::where('affiliate_id', $affiliate->id)
                     ->update(['is_active' => false, 'affiliate_id' => null]);
+
+                // El nuevo titular recibe su propia cuenta del portal
+                return $successor
+                    ? app(PortalAccountService::class)->ensureFor($affiliate->refresh())?->username
+                    : null;
             });
         } catch (\Throwable $e) {
             Log::error('Error al registrar fallecimiento: ' . $e->getMessage());
@@ -350,6 +359,7 @@ class AffiliateController extends Controller
 
         return back()->with('message', $hasSuccessor
             ? "Fallecimiento registrado. {$affiliate->full_name} es ahora el titular."
+                . ($usuarioNuevo ? " Usuario del portal: {$usuarioNuevo}." : '')
             : 'Fallecimiento registrado. El afiliado quedó inactivo.');
     }
 

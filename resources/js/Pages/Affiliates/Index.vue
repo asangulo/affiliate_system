@@ -456,6 +456,10 @@ const paginationLinks = computed(() => props.affiliates.links || []);
                                 <p class="af-detail__val">{{ selectedAff.address || 'N/A' }}</p>
                             </div>
                             <div class="af-detail">
+                                <p class="af-detail__label">Usuario del portal</p>
+                                <p class="af-detail__val">{{ selectedAff.user?.username || 'Sin usuario' }}</p>
+                            </div>
+                            <div class="af-detail">
                                 <p class="af-detail__label">Asesor</p>
                                 <p class="af-detail__val">{{ selectedAff.advisor_name || 'N/A' }}</p>
                             </div>

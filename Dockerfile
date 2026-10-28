@@ -129,4 +129,5 @@ CMD php artisan config:cache && \
     php artisan route:cache && \
     php artisan migrate --force && \
     php artisan db:seed --class=RolesAndPermissionsSeeder --force && \
+    (php artisan portal:create-users || true) && \
     apache2-foreground

@@ -109,7 +109,7 @@ const roleLabel = (roleName) => ({
                                         </div>
                                         <div>
                                             <p class="adm-user-name">{{ user.name }}</p>
-                                            <p class="adm-user-email">{{ user.email }}</p>
+                                            <p class="adm-user-email">{{ user.username || user.email }}</p>
                                         </div>
                                     </div>
                                 </td>

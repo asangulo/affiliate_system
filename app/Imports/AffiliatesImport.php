@@ -7,6 +7,7 @@ use App\Models\Affiliate;
 use App\Models\Beneficiary;
 use App\Models\Branch;
 use App\Models\Plan;
+use App\Services\PortalAccountService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\OnEachRow;
@@ -78,6 +79,16 @@ class AffiliatesImport implements OnEachRow, WithHeadingRow
             'birth_date'       => $this->cleanDate($data['fecha_de_nacimiento'] ?? null),
         ]);
         $affiliate->save();
+
+        // Cuenta del portal para el titular (usuario nombre.apellido)
+        try {
+            app(PortalAccountService::class)->ensureFor($affiliate);
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo crear la cuenta del portal', [
+                'cedula' => $affiliate->id_number,
+                'error'  => $e->getMessage(),
+            ]);
+        }
 
         // Leer comentario columna R y procesar beneficiarios
         $commentText = $this->getCommentText($row, $rowIndex);

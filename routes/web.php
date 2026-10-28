@@ -133,6 +133,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('/historial/{type}/{id}', [ActivityLogController::class, 'forSubject'])
+         ->middleware('role:super_admin|empleado')
          ->name('activity.subject');
 
     // ── REPORTES ─────────────────────────────────────────────
