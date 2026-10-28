@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps({
     branches: Array,
@@ -27,6 +27,18 @@ const form = useForm({
 });
 
 // ── Beneficiarios ──────────────────────────────────────────
+// Al elegir un plan se sugiere su valor base, salvo que ya se haya escrito otro valor a mano.
+let sugerido = '';
+watch(() => form.plan_id, (id) => {
+    const plan = props.plans.find(p => p.id === id);
+    if (!plan) return;
+
+    if (form.fee_amount === '' || String(form.fee_amount) === String(sugerido)) {
+        sugerido = Number(plan.base_price);
+        form.fee_amount = sugerido > 0 ? sugerido : '';
+    }
+});
+
 const addBeneficiary = () => {
     form.beneficiaries.push({
         full_name: '', relationship: '', age: '', auxilio: '',

@@ -202,6 +202,33 @@ const secciones = [
         ],
     },
     {
+        id: 'planes',
+        titulo: 'Planes',
+        badge: 'Solo Super Admin',
+        ruta: 'plans.index',
+        rutaLabel: 'Ir a Planes',
+        intro: 'Aquí se administran los planes que se ofrecen a los afiliados (por ejemplo, Básico o Premium).',
+        flujos: [
+            {
+                titulo: 'Crear o editar un plan',
+                pasos: [
+                    'Haz clic en "Nuevo plan", escribe el nombre, el valor base de la cuota y, si quieres, una descripción.',
+                    'Para cambiar uno existente, usa "Editar" en su fila.',
+                    'El valor base se sugiere al registrar un afiliado nuevo con ese plan. Cambiarlo no modifica la cuota de los afiliados que ya existen.',
+                    'No pueden existir dos planes con el mismo nombre.',
+                ],
+            },
+            {
+                titulo: 'Desactivar o eliminar un plan',
+                pasos: [
+                    'Un plan inactivo deja de aparecer al registrar afiliados, pero los afiliados que ya lo tienen lo conservan.',
+                    'Solo se puede eliminar un plan que no tenga afiliados; si los tiene, desactívalo.',
+                    'Al importar un Excel, si el plan no existe todavía, se crea automáticamente y luego puedes ajustar su valor base aquí.',
+                ],
+            },
+        ],
+    },
+    {
         id: 'historial',
         titulo: 'Historial',
         badge: 'Solo Super Admin',

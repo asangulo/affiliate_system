@@ -79,7 +79,7 @@ class AffiliateController extends Controller
     {
         return Inertia::render('Affiliates/Create', [
             'branches' => Branch::orderBy('name')->get(['id', 'name']),
-            'plans'    => Plan::orderBy('name')->get(['id', 'name']),
+            'plans'    => Plan::where('is_active', true)->orderBy('name')->get(['id', 'name', 'base_price']),
         ]);
     }
 
@@ -170,7 +170,7 @@ class AffiliateController extends Controller
         return Inertia::render('Affiliates/Edit', [
             'affiliate' => $affiliate->load(['beneficiaries', 'holderChanges.performer:id,name']),
             'branches'  => Branch::orderBy('name')->get(['id', 'name']),
-            'plans'     => Plan::orderBy('name')->get(['id', 'name']),
+            'plans'     => Plan::where('is_active', true)->orWhere('id', $affiliate->plan_id)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

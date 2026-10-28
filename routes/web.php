@@ -8,6 +8,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PlanController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -110,6 +111,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/sedes/{branch}',       [BranchController::class, 'update'])->name('branches.update');
         Route::delete('/sedes/{branch}',    [BranchController::class, 'destroy'])->name('branches.destroy');
         Route::patch('/sedes/{branch}/estado', [BranchController::class, 'toggle'])->name('branches.toggle');
+    });
+
+    // ── PLANES ───────────────────────────────────────────────
+    Route::middleware('role:super_admin')->group(function () {
+        Route::get('/planes',                [PlanController::class, 'index'])->name('plans.index');
+        Route::post('/planes',               [PlanController::class, 'store'])->name('plans.store');
+        Route::put('/planes/{plan}',         [PlanController::class, 'update'])->name('plans.update');
+        Route::patch('/planes/{plan}/estado', [PlanController::class, 'toggle'])->name('plans.toggle');
+        Route::delete('/planes/{plan}',      [PlanController::class, 'destroy'])->name('plans.destroy');
     });
 
     // ── PAGOS (personal interno) ─────────────────────────────

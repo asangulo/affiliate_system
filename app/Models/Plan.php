@@ -11,7 +11,12 @@ class Plan extends Model
 {
     use HasFactory, LogsActivity;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'base_price', 'description', 'is_active'];
+
+    protected $casts = [
+        'base_price' => 'decimal:2',
+        'is_active'  => 'boolean',
+    ];
 
     public function affiliates(): HasMany
     {

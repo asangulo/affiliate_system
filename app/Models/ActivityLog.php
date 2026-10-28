@@ -134,6 +134,8 @@ class ActivityLog extends Model
             'manager_name'     => 'Encargado',
             'code'             => 'Código',
             'name'             => 'Nombre',
+            'base_price'       => 'Valor base',
+            'description'      => 'Descripción',
             'affiliate_id'        => 'Afiliado',
             'reason'              => 'Motivo',
             'deceased_at'         => 'Fecha de fallecimiento',
