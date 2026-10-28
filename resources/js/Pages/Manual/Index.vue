@@ -10,10 +10,36 @@ const setActive = (id) => { activeId.value = id; };
 const roles = [
     { badge: 'super_admin', color: 'navy',  titulo: 'Super Admin', texto: 'Acceso total al sistema: afiliados, cartera, pagos, sedes, historial, reportes, usuarios y roles.' },
     { badge: 'empleado',    color: 'blue',  titulo: 'Empleado', texto: 'Gestión diaria: afiliados, beneficiarios, importación desde Excel, cartera, pagos y reportes. No administra usuarios ni sedes.' },
-    { badge: 'cliente',     color: 'green', titulo: 'Cliente', texto: 'Portal personal: consulta su plan ("Mi Plan") y sus propios pagos ("Mis Pagos"). No ve información de otros afiliados.' },
+    { badge: 'cliente',     color: 'green', titulo: 'Cliente', texto: 'Es el titular del contrato. Su cuenta se crea sola: entra con su usuario (nombre.apellido), consulta su plan ("Mi Plan"), su grupo familiar y sus propios pagos ("Mis Pagos"). No ve información de otros afiliados.' },
 ];
 
 const secciones = [
+    {
+        id: 'acceso',
+        titulo: 'Ingresar y contraseña',
+        badge: 'Todos los roles',
+        ruta: 'profile.edit',
+        rutaLabel: 'Ir a Mi Perfil',
+        intro: 'Cómo entrar al sistema y cómo cambiar tu contraseña.',
+        flujos: [
+            {
+                titulo: 'Iniciar sesión',
+                pasos: [
+                    'En la pantalla de ingreso escribe tu correo o tu usuario en el primer campo, y tu contraseña en el segundo.',
+                    'Los titulares (clientes) entran con su usuario: primer nombre, un punto y primer apellido. Ejemplo: alex.angulo (sin tildes y en minúsculas).',
+                    'La contraseña inicial de los titulares es la que les entrega Horizonte S.A.S. Si dos titulares tienen el mismo nombre y apellido, al segundo se le agrega un número (alex.angulo2).',
+                ],
+            },
+            {
+                titulo: 'Cambiar la contraseña',
+                pasos: [
+                    'En tu primer ingreso el sistema te pedirá cambiar la contraseña inicial: es obligatorio y no podrás ver nada más hasta hacerlo.',
+                    'Para cambiarla después, entra a "Mi Perfil" y usa el formulario "Actualizar contraseña". Debes escribir la contraseña actual y una nueva diferente.',
+                    'Si olvidaste tu contraseña, comunícate con Horizonte S.A.S: un Super Admin puede asignarte una nueva desde Usuarios. La opción de recuperarla por correo solo sirve si tu cuenta tiene un correo real.',
+                ],
+            },
+        ],
+    },
     {
         id: 'afiliados',
         titulo: 'Afiliados',
@@ -29,6 +55,7 @@ const secciones = [
                     'Completa cédula, nombre, sede, plan, valor de la cuota y fecha de afiliación.',
                     'Si tiene beneficiarios, agrégalos en la misma pantalla (nombre, parentesco, edad, auxilio).',
                     'Guarda — quedará activo y visible de inmediato en el listado.',
+                    'El sistema crea automáticamente el usuario del titular para el portal y te muestra su nombre de usuario en el mensaje de confirmación.',
                 ],
             },
             {
@@ -45,6 +72,19 @@ const secciones = [
                     'Haz clic en "Importar Excel" en la parte superior del listado.',
                     'Selecciona el archivo .xlsx con las columnas esperadas por la plantilla.',
                     'Confirma — si alguna fila falla, el resto se importa igual y se avisa cuál tuvo error.',
+                    'Cada titular nuevo del archivo recibe su usuario del portal de forma automática. Los que ya tenían usuario no se tocan. Para ver el usuario de un titular, abre "Ver" en el listado.',
+                ],
+            },
+            {
+                titulo: 'Registrar el fallecimiento del titular',
+                pasos: [
+                    'En el listado, busca al titular y haz clic en "Fallecido" (solo aparece en afiliados activos).',
+                    'Indica la fecha de fallecimiento y, si quieres, una observación (por ejemplo, el certificado de defunción).',
+                    'Elige qué beneficiario pasa a ser el nuevo titular, o "Ninguno (cerrar contrato)" si nadie lo reemplaza.',
+                    'Si eliges a un beneficiario, escribe su cédula (obligatoria). Fecha de nacimiento, teléfono y correo son opcionales.',
+                    'Al confirmar, el contrato sigue siendo el mismo: se conservan los pagos, el plan y la cuota. El beneficiario elegido deja de figurar como beneficiario y pasa a ser el titular.',
+                    'El titular fallecido queda guardado en "Historial de titulares" (al editar el afiliado) con su nombre, cédula y fecha. Su cuenta del portal se desactiva y el nuevo titular recibe la suya, con su propio usuario.',
+                    'Si eliges "Ninguno", el afiliado queda inactivo.',
                 ],
             },
             {
@@ -127,11 +167,12 @@ const secciones = [
                 ],
             },
             {
-                titulo: 'Cómo se vincula la cuenta de un cliente a su afiliación',
+                titulo: 'Cómo obtiene su cuenta un titular',
                 pasos: [
-                    'Un cliente por sí solo no puede vincularse: lo hace un Super Admin o Empleado.',
-                    'Al crear o editar el usuario del cliente (en Usuarios), se le asigna el afiliado correspondiente.',
-                    'Si un cliente ve "Tu cuenta aún no está vinculada a un plan", significa que todavía falta este paso.',
+                    'La cuenta se crea sola cuando el titular se importa por Excel, se registra a mano o pasa a ser titular por fallecimiento del anterior. Ya está vinculada a su afiliación.',
+                    'Su usuario es el primer nombre, un punto y el primer apellido (ej. alex.angulo). Puedes consultarlo en "Ver" dentro de Afiliados, o en el listado de Usuarios.',
+                    'Debe cambiar la contraseña inicial en su primer ingreso (ver "Ingresar y contraseña").',
+                    'Si un cliente ve "Tu cuenta aún no está vinculada a un plan", un Super Admin puede vincularla desde Usuarios.',
                 ],
             },
         ],
@@ -173,6 +214,7 @@ const secciones = [
                 pasos: [
                     'Cada vez que se crea, edita o elimina un afiliado, beneficiario, pago, sede, plan o usuario.',
                     'Se guarda quién lo hizo, cuándo, y qué campos cambiaron (valor anterior y nuevo).',
+                    'Los cambios de titular por fallecimiento aparecen como "Cambio de titular" y se pueden filtrar por ese tipo.',
                 ],
             },
             {
@@ -226,11 +268,18 @@ const secciones = [
                 ],
             },
             {
-                titulo: 'Crear la cuenta de un cliente y vincularla a su afiliación',
+                titulo: 'Cuentas de clientes (titulares)',
                 pasos: [
-                    'Crea el usuario con el rol "Cliente".',
-                    'En el mismo formulario, selecciona el afiliado al que corresponde esa cuenta.',
+                    'Normalmente no tienes que crearlas: se generan solas al importar, registrar un afiliado o cambiar de titular.',
+                    'Solo si hace falta una excepción, crea el usuario con el rol "Cliente" y selecciona el afiliado al que corresponde en el mismo formulario.',
                     'Desde ese momento, ese cliente podrá ver "Mi Plan" y "Mis Pagos" con su información real.',
+                ],
+            },
+            {
+                titulo: 'Ayudar a un cliente que olvidó su contraseña',
+                pasos: [
+                    'Busca al usuario por nombre, correo o nombre de usuario (ej. alex.angulo) y entra a "Editar".',
+                    'Escribe una contraseña nueva y guarda. Entrégasela al cliente por un medio seguro y recomiéndale cambiarla en "Mi Perfil".',
                 ],
             },
             {
