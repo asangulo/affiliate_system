@@ -55,6 +55,11 @@ class Affiliate extends Model
         return $this->hasMany(Beneficiary::class);
     }
 
+    public function holderChanges(): HasMany
+    {
+        return $this->hasMany(HolderChange::class)->latest('deceased_at')->latest('id');
+    }
+
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class)

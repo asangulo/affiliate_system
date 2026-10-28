@@ -244,6 +244,34 @@ const submit = () => {
                     </button>
                 </div>
 
+                <!-- ══ HISTORIAL DE TITULARES ══ -->
+                <div v-if="affiliate.holder_changes?.length" class="af-section">
+                    <div class="af-section__head">
+                        <div class="af-section__num">4</div>
+                        <div>
+                            <h3 class="af-section__title">Historial de titulares</h3>
+                            <p class="af-section__sub">Cambios de titular por fallecimiento</p>
+                        </div>
+                    </div>
+                    <div class="af-ben-list">
+                        <div v-for="h in affiliate.holder_changes" :key="h.id" class="af-ben-card">
+                            <div class="af-ben-card__header">
+                                <span class="af-ben-card__num">
+                                    Fallecido el {{ new Date(h.deceased_at).toLocaleDateString('es-CO', { timeZone: 'UTC' }) }}
+                                </span>
+                            </div>
+                            <div class="af-hist">
+                                <p><strong>{{ h.previous_full_name }}</strong> · C.C. {{ h.previous_id_number }}</p>
+                                <p v-if="h.new_full_name">Nuevo titular: <strong>{{ h.new_full_name }}</strong> · C.C. {{ h.new_id_number }}</p>
+                                <p v-else>Contrato cerrado sin sucesor.</p>
+                                <p v-if="h.notes" class="af-hist__note">{{ h.notes }}</p>
+                                <p v-if="h.performer" class="af-hist__note">Registrado por {{ h.performer.name }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="height:20px"/>
+                </div>
+
                 <!-- Acciones -->
                 <div class="af-actions">
                     <Link :href="route('affiliates.index')" class="af-btn af-btn--cancel">
@@ -325,6 +353,9 @@ const submit = () => {
 .af-btn-add-ben { display:flex; align-items:center; gap:7px; margin:16px 24px 20px; padding:9px 18px; border:1.5px dashed #2eaa45; border-radius:9px; background:#f0fdf4; color:#166534; font-size:0.85rem; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; transition:background 0.18s; }
 .af-btn-add-ben:hover { background:#dcfce7; }
 .af-btn-add-ben svg { width:16px; height:16px; }
+
+.af-hist { padding:12px 16px; font-size:0.85rem; color:#1e293b; display:flex; flex-direction:column; gap:4px; }
+.af-hist__note { color:#64748b; font-size:0.78rem; }
 
 .af-actions { display:flex; align-items:center; justify-content:flex-end; gap:12px; padding:4px 0 8px; }
 .af-btn { display:inline-flex; align-items:center; gap:6px; padding:11px 24px; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:600; cursor:pointer; text-decoration:none; border:none; transition:all 0.2s; }

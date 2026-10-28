@@ -17,6 +17,11 @@ class Beneficiary extends Model
         'age',
         'auxilio',
         'holder_note',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     public function affiliate()

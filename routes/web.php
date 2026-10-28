@@ -63,6 +63,7 @@ Route::middleware(['auth', 'verified', 'role:super_admin|empleado'])->prefix('af
     Route::get('/{affiliate}/edit', [AffiliateController::class, 'edit'])->name('edit');
     Route::patch('/{affiliate}',    [AffiliateController::class, 'update'])->name('update');
     Route::patch('/{affiliate}/toggle-status', [AffiliateController::class, 'toggleStatus'])->name('toggleStatus');
+    Route::post('/{affiliate}/deceased', [AffiliateController::class, 'deceased'])->name('deceased');
 });
 
 // ══════════════════════════════════════════════

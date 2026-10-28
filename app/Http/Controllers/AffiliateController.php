@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Affiliate;
 use App\Models\Branch;
+use App\Models\HolderChange;
 use App\Models\Plan;
+use App\Models\User;
 use App\Imports\AffiliatesImport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -160,7 +164,7 @@ class AffiliateController extends Controller
     public function edit(Affiliate $affiliate)
     {
         return Inertia::render('Affiliates/Edit', [
-            'affiliate' => $affiliate->load('beneficiaries'),
+            'affiliate' => $affiliate->load(['beneficiaries', 'holderChanges.performer:id,name']),
             'branches'  => Branch::orderBy('name')->get(['id', 'name']),
             'plans'     => Plan::orderBy('name')->get(['id', 'name']),
         ]);
@@ -265,6 +269,88 @@ class AffiliateController extends Controller
             : "Afiliado {$affiliate->full_name} inactivado.";
 
         return back()->with('message', $msg);
+    }
+
+    // ── FALLECIMIENTO DEL TITULAR ─────────────────────────────
+    // Un beneficiario pasa a ser el nuevo titular del mismo contrato
+    // (pagos, plan y cuota se conservan). El titular anterior queda
+    // en holder_changes como historial. Sin sucesor, se inactiva el contrato.
+    public function deceased(Request $request, Affiliate $affiliate)
+    {
+        if (! $affiliate->is_active) {
+            return back()->with('error', 'Este afiliado ya está inactivo.');
+        }
+
+        $hasSuccessor = $request->filled('successor_id');
+
+        $validated = $request->validate([
+            'deceased_at'   => 'required|date|before_or_equal:today',
+            'notes'         => 'nullable|string|max:1000',
+            'successor_id'  => [
+                'nullable',
+                Rule::exists('beneficiaries', 'id')
+                    ->where('affiliate_id', $affiliate->id)
+                    ->where('is_active', true),
+            ],
+            'new_id_number' => [Rule::requiredIf($hasSuccessor), 'nullable', 'string', 'max:20', 'unique:affiliates,id_number'],
+            'new_birth_date' => 'nullable|date|before:today',
+            'new_phone'      => 'nullable|string|max:20',
+            'new_email'      => 'nullable|email|max:255',
+        ], [
+            'deceased_at.before_or_equal' => 'La fecha de fallecimiento no puede ser futura.',
+            'new_id_number.required'      => 'Indica la cédula del nuevo titular.',
+            'new_id_number.unique'        => 'Ya existe un afiliado con esa cédula.',
+        ]);
+
+        try {
+            DB::transaction(function () use ($affiliate, $validated, $hasSuccessor) {
+                $successor = $hasSuccessor
+                    ? $affiliate->beneficiaries()->lockForUpdate()->findOrFail($validated['successor_id'])
+                    : null;
+
+                HolderChange::create([
+                    'affiliate_id'        => $affiliate->id,
+                    'reason'              => 'fallecimiento',
+                    'deceased_at'         => $validated['deceased_at'],
+                    'notes'               => $validated['notes'] ?? null,
+                    'previous_full_name'  => $affiliate->full_name,
+                    'previous_id_number'  => $affiliate->id_number,
+                    'previous_birth_date' => $affiliate->birth_date,
+                    'previous_phone'      => $affiliate->phone,
+                    'previous_email'      => $affiliate->email,
+                    'beneficiary_id'      => $successor?->id,
+                    'new_full_name'       => $successor?->full_name,
+                    'new_id_number'       => $validated['new_id_number'] ?? null,
+                    'performed_by'        => Auth::id(),
+                ]);
+
+                if ($successor) {
+                    $affiliate->update([
+                        'full_name'  => $successor->full_name,
+                        'id_number'  => $validated['new_id_number'],
+                        'birth_date' => $validated['new_birth_date'] ?? null,
+                        'phone'      => $validated['new_phone'] ?? null,
+                        'email'      => $validated['new_email'] ?? null,
+                    ]);
+
+                    // Ya es titular: deja de figurar como beneficiario
+                    $successor->update(['is_active' => false]);
+                } else {
+                    $affiliate->update(['is_active' => false]);
+                }
+
+                // La cuenta del portal era del titular fallecido
+                User::where('affiliate_id', $affiliate->id)
+                    ->update(['is_active' => false, 'affiliate_id' => null]);
+            });
+        } catch (\Throwable $e) {
+            Log::error('Error al registrar fallecimiento: ' . $e->getMessage());
+            return back()->with('error', 'No se pudo registrar el fallecimiento. Inténtalo de nuevo.');
+        }
+
+        return back()->with('message', $hasSuccessor
+            ? "Fallecimiento registrado. {$affiliate->full_name} es ahora el titular."
+            : 'Fallecimiento registrado. El afiliado quedó inactivo.');
     }
 
     // ── IMPORT ────────────────────────────────────────────────

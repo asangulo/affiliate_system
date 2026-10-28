@@ -101,6 +101,42 @@ const toggleStatus = (id) => {
     toggleForm.patch(route('affiliates.toggleStatus', id));
 };
 
+// ── Fallecimiento del titular ──────────────────────────────
+const showDeceased  = ref(false);
+const deceasedAff   = ref(null);
+const today         = new Date().toISOString().slice(0, 10);
+const deceasedForm  = useForm({
+    deceased_at:    today,
+    notes:          '',
+    successor_id:   '',
+    new_id_number:  '',
+    new_birth_date: '',
+    new_phone:      '',
+    new_email:      '',
+});
+
+const activeBeneficiaries = computed(() =>
+    (deceasedAff.value?.beneficiaries ?? []).filter(b => b.is_active)
+);
+const successor = computed(() =>
+    activeBeneficiaries.value.find(b => b.id === deceasedForm.successor_id) ?? null
+);
+
+const openDeceased = (aff) => {
+    deceasedAff.value = aff;
+    deceasedForm.reset();
+    deceasedForm.clearErrors();
+    showDeceased.value = true;
+};
+const closeDeceased = () => { showDeceased.value = false; deceasedAff.value = null; };
+
+const submitDeceased = () => {
+    deceasedForm.post(route('affiliates.deceased', deceasedAff.value.id), {
+        preserveScroll: true,
+        onSuccess: closeDeceased,
+    });
+};
+
 const paginationLinks = computed(() => props.affiliates.links || []);
 </script>
 
@@ -238,6 +274,10 @@ const paginationLinks = computed(() => props.affiliates.links || []);
                                             :class="aff.is_active ? 'af-action--deactivate' : 'af-action--activate'">
                                             {{ aff.is_active ? 'Inactivar' : 'Activar' }}
                                         </button>
+                                        <button v-if="aff.is_active" @click="openDeceased(aff)"
+                                            class="af-action af-action--deceased">
+                                            Fallecido
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -278,6 +318,90 @@ const paginationLinks = computed(() => props.affiliates.links || []);
                 </div>
             </div>
         </div>
+
+        <!-- ── MODAL FALLECIMIENTO ── -->
+        <Teleport to="body">
+            <div v-if="showDeceased" class="af-modal-overlay" @click.self="closeDeceased">
+                <form class="af-modal" @submit.prevent="submitDeceased">
+                    <div class="af-modal__header">
+                        <h3>Registrar fallecimiento del titular</h3>
+                        <button type="button" @click="closeDeceased" class="af-modal__close">✕</button>
+                    </div>
+                    <div class="af-modal__body" v-if="deceasedAff">
+                        <p class="af-dec__intro">
+                            Titular: <strong>{{ deceasedAff.full_name }}</strong> · C.C. {{ deceasedAff.id_number }}.
+                            El contrato, los pagos y el plan se conservan; el titular actual queda en el historial.
+                        </p>
+
+                        <div class="af-modal__grid">
+                            <div class="af-detail">
+                                <label class="af-detail__label">Fecha de fallecimiento *</label>
+                                <input v-model="deceasedForm.deceased_at" type="date" :max="today" class="af-input" required/>
+                                <p v-if="deceasedForm.errors.deceased_at" class="af-dec__err">{{ deceasedForm.errors.deceased_at }}</p>
+                            </div>
+                            <div class="af-detail af-detail--full">
+                                <label class="af-detail__label">Observaciones</label>
+                                <textarea v-model="deceasedForm.notes" rows="2" maxlength="1000" class="af-input"
+                                    placeholder="Ej: certificado de defunción, quién informó, etc."/>
+                            </div>
+                        </div>
+
+                        <h4 class="af-modal__ben-title">¿Quién pasa a ser el nuevo titular?</h4>
+                        <div class="af-dec__options">
+                            <label v-for="ben in activeBeneficiaries" :key="ben.id" class="af-dec__option"
+                                :class="{ 'af-dec__option--on': deceasedForm.successor_id === ben.id }">
+                                <input type="radio" v-model="deceasedForm.successor_id" :value="ben.id"/>
+                                <span>
+                                    <strong>{{ ben.full_name }}</strong>
+                                    <small>{{ ben.relationship || 'Sin parentesco' }} · Edad: {{ ben.age || 'N/A' }}</small>
+                                </span>
+                            </label>
+                            <label class="af-dec__option"
+                                :class="{ 'af-dec__option--on': deceasedForm.successor_id === '' }">
+                                <input type="radio" v-model="deceasedForm.successor_id" value=""/>
+                                <span>
+                                    <strong>Ninguno (cerrar contrato)</strong>
+                                    <small>El afiliado quedará inactivo.</small>
+                                </span>
+                            </label>
+                        </div>
+                        <p v-if="deceasedForm.errors.successor_id" class="af-dec__err">{{ deceasedForm.errors.successor_id }}</p>
+
+                        <div v-if="successor" class="af-modal__grid af-dec__new">
+                            <div class="af-detail af-detail--full">
+                                <p class="af-detail__label">Datos del nuevo titular: {{ successor.full_name }}</p>
+                            </div>
+                            <div class="af-detail">
+                                <label class="af-detail__label">Cédula *</label>
+                                <input v-model="deceasedForm.new_id_number" type="text" maxlength="20" class="af-input"/>
+                                <p v-if="deceasedForm.errors.new_id_number" class="af-dec__err">{{ deceasedForm.errors.new_id_number }}</p>
+                            </div>
+                            <div class="af-detail">
+                                <label class="af-detail__label">Fecha de nacimiento</label>
+                                <input v-model="deceasedForm.new_birth_date" type="date" :max="today" class="af-input"/>
+                                <p v-if="deceasedForm.errors.new_birth_date" class="af-dec__err">{{ deceasedForm.errors.new_birth_date }}</p>
+                            </div>
+                            <div class="af-detail">
+                                <label class="af-detail__label">Teléfono</label>
+                                <input v-model="deceasedForm.new_phone" type="tel" maxlength="20" class="af-input"/>
+                                <p v-if="deceasedForm.errors.new_phone" class="af-dec__err">{{ deceasedForm.errors.new_phone }}</p>
+                            </div>
+                            <div class="af-detail">
+                                <label class="af-detail__label">Correo</label>
+                                <input v-model="deceasedForm.new_email" type="email" class="af-input"/>
+                                <p v-if="deceasedForm.errors.new_email" class="af-dec__err">{{ deceasedForm.errors.new_email }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="af-modal__footer">
+                        <button type="button" @click="closeDeceased" class="af-btn af-btn--cancel">Cancelar</button>
+                        <button type="submit" :disabled="deceasedForm.processing" class="af-btn af-btn--new">
+                            {{ deceasedForm.processing ? 'Guardando...' : 'Confirmar fallecimiento' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </Teleport>
 
         <!-- ── MODAL DETALLE ── -->
         <Teleport to="body">
@@ -353,8 +477,8 @@ const paginationLinks = computed(() => props.affiliates.links || []);
                                 <p>{{ holderNote }}</p>
                             </div>
 
-                            <div v-if="selectedAff.beneficiaries?.length" class="af-ben-list">
-                                <div v-for="ben in selectedAff.beneficiaries" :key="ben.id"
+                            <div v-if="selectedAff.beneficiaries?.some(b => b.is_active)" class="af-ben-list">
+                                <div v-for="ben in selectedAff.beneficiaries.filter(b => b.is_active)" :key="ben.id"
                                     class="af-ben-item">
                                     <div>
                                         <span class="af-ben-item__name">{{ ben.full_name }}</span>
@@ -461,6 +585,19 @@ const paginationLinks = computed(() => props.affiliates.links || []);
 .af-action--deactivate:hover { background:#ffedd5; }
 .af-action--activate         { background:#f0fdf4; color:#15803d; }
 .af-action--activate:hover   { background:#dcfce7; }
+
+.af-action--deceased       { background:#f1f5f9; color:#334155; }
+.af-action--deceased:hover { background:#e2e8f0; }
+
+/* Fallecimiento */
+.af-dec__intro { font-size:0.85rem; color:#475569; margin-bottom:16px; }
+.af-dec__options { display:flex; flex-direction:column; gap:8px; margin-bottom:8px; }
+.af-dec__option { display:flex; align-items:center; gap:10px; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; cursor:pointer; }
+.af-dec__option span { display:flex; flex-direction:column; font-size:0.88rem; color:#1e293b; }
+.af-dec__option small { color:#64748b; font-size:0.75rem; }
+.af-dec__option--on { border-color:#1565a8; background:#eff6ff; }
+.af-dec__new { margin-top:16px; padding-top:16px; border-top:1.5px solid #f0f4f8; }
+.af-dec__err { color:#ef4444; font-size:0.75rem; margin-top:3px; }
 
 /* Vacío */
 .af-empty { text-align:center; padding:40px; color:#94a3b8; font-size:0.88rem; }

@@ -13,11 +13,20 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // MODIFY es sintaxis de MySQL; en otros motores (SQLite de los tests) se omite.
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement('ALTER TABLE beneficiaries MODIFY age VARCHAR(255) NULL');
     }
 
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement("ALTER TABLE beneficiaries MODIFY age VARCHAR(255) NOT NULL DEFAULT ''");
     }
 };
