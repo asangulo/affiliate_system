@@ -65,7 +65,7 @@ const roleLabel = (roleName) => ({
                 <div class="adm-toolbar">
                     <div class="adm-toolbar__filters">
                         <input v-model="search" type="text"
-                            placeholder="Buscar por nombre o correo..."
+                            placeholder="Buscar por nombre, correo o usuario..."
                             class="adm-input adm-input--search"/>
 
                         <select v-model="role" class="adm-input adm-select">
@@ -94,8 +94,8 @@ const roleLabel = (roleName) => ({
                         <thead>
                             <tr>
                                 <th>Usuario</th>
+                                <th>Nombre de usuario</th>
                                 <th>Rol</th>
-                                <th>Afiliado Vinculado</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
@@ -109,9 +109,13 @@ const roleLabel = (roleName) => ({
                                         </div>
                                         <div>
                                             <p class="adm-user-name">{{ user.name }}</p>
-                                            <p class="adm-user-email">{{ user.username || user.email }}</p>
+                                            <p class="adm-user-email">{{ user.email }}</p>
                                         </div>
                                     </div>
+                                </td>
+                                <td>
+                                    <span v-if="user.username" class="adm-username">{{ user.username }}</span>
+                                    <span v-else class="adm-nodata">—</span>
                                 </td>
                                 <td>
                                     <span
@@ -123,13 +127,6 @@ const roleLabel = (roleName) => ({
                                         {{ roleLabel(r.name) }}
                                     </span>
                                     <span v-if="!user.roles.length" class="adm-nodata">Sin rol</span>
-                                </td>
-                                <td>
-                                    <span v-if="user.affiliate" class="adm-affiliate-link">
-                                        {{ user.affiliate?.full_name }}
-                                        <small>{{ user.affiliate?.id_number }}</small>
-                                    </span>
-                                    <span v-else class="adm-nodata">—</span>
                                 </td>
                                 <td>
                                     <span class="status-pill" :class="user.is_active ? 'status-pill--active' : 'status-pill--inactive'">
@@ -352,8 +349,7 @@ const roleLabel = (roleName) => ({
 }
 
 /* Affiliate cell */
-.adm-affiliate-link { display: flex; flex-direction: column; }
-.adm-affiliate-link small { font-size: 0.72rem; color: #94a3b8; }
+.adm-username { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; color: #0a3d6b; background: #eff6ff; padding: 2px 8px; border-radius: 6px; }
 .adm-nodata { color: #cbd5e1; font-size: 0.82rem; }
 
 /* Actions */
