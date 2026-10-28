@@ -140,7 +140,63 @@ class PermissionEnforcementTest extends TestCase
         $admin = $this->userWithRole('super_admin');
         $this->actingAs($rrhh->fresh())->patch(route('admin.users.update', $admin), [
             'name' => 'Hackeado', 'email' => $admin->email, 'role' => 'empleado',
-        ])->assertForbidden();
+        ])->assertNotFound();
+    }
+
+    public function test_super_admin_accounts_and_role_are_hidden_from_other_users(): void
+    {
+        $rol = Role::create(['name' => 'rrhh', 'guard_name' => 'web']);
+        $rol->givePermissionTo(['Ver roles y permisos', 'Ver usuarios', 'Crear usuarios', 'Editar usuarios',
+                                'Activar o inactivar usuarios', 'Asignar roles']);
+        $rrhh  = $this->userWithRole('rrhh');
+        $admin = $this->userWithRole('super_admin');
+        $admin->update(['name' => 'Jefa Suprema']);
+        $this->userWithRole('empleado')->update(['name' => 'Pedro Empleado']);
+
+        // Lista: no aparece el super_admin, ni siquiera buscándolo por nombre
+        $this->actingAs($rrhh)->get(route('admin.users.index'))
+            ->assertInertia(fn ($p) => $p->component('Admin/Users/Index')
+                ->where('users.data', fn ($u) => collect($u)->doesntContain('name', 'Jefa Suprema')
+                    && collect($u)->contains('name', 'Pedro Empleado'))
+                ->where('roles', fn ($r) => collect($r)->doesntContain('name', 'super_admin')));
+
+        $this->actingAs($rrhh)->get(route('admin.users.index', ['search' => 'Jefa']))
+            ->assertInertia(fn ($p) => $p->where('users.total', 0));
+
+        // El filtro por rol tampoco lo deja pasar
+        $this->actingAs($rrhh)->get(route('admin.users.index', ['role' => 'super_admin']))
+            ->assertInertia(fn ($p) => $p->where('users.total', 0));
+
+        // Crear: no se ofrece el rol super_admin
+        $this->actingAs($rrhh)->get(route('admin.users.create'))
+            ->assertInertia(fn ($p) => $p->where('roles', fn ($r) => collect($r)->doesntContain('name', 'super_admin')));
+
+        // Editar o inactivar una cuenta super_admin "no existe"
+        $this->actingAs($rrhh)->get(route('admin.users.edit', $admin))->assertNotFound();
+        $this->actingAs($rrhh)->patch(route('admin.users.toggle', $admin))->assertNotFound();
+        $this->assertTrue($admin->fresh()->is_active);
+
+        // Roles y permisos: no se lista el rol super_admin
+        $this->actingAs($rrhh)->get(route('admin.roles.index'))
+            ->assertInertia(fn ($p) => $p->where('roles', fn ($r) => collect($r)->doesntContain('name', 'super_admin')));
+
+        // El super_admin sí ve todo
+        $this->actingAs($admin)->get(route('admin.users.index'))
+            ->assertInertia(fn ($p) => $p->where('users.data', fn ($u) => collect($u)->contains('name', 'Jefa Suprema'))
+                ->where('roles', fn ($r) => collect($r)->contains('name', 'super_admin')));
+    }
+
+    public function test_user_search_keeps_the_other_filters(): void
+    {
+        $admin = $this->userWithRole('super_admin');
+        $a = $this->userWithRole('empleado');
+        $b = $this->userWithRole('cliente');
+        $a->update(['name' => 'Juan Perez']);
+        $b->update(['name' => 'Juan Gomez']);
+
+        // Buscar "Juan" filtrando por rol cliente solo debe dar el cliente
+        $this->actingAs($admin)->get(route('admin.users.index', ['search' => 'Juan', 'role' => 'cliente']))
+            ->assertInertia(fn ($p) => $p->where('users.total', 1)->where('users.data.0.name', 'Juan Gomez'));
     }
 
     public function test_seeder_does_not_overwrite_permissions_edited_on_existing_roles(): void

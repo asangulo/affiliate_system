@@ -186,7 +186,7 @@ const roleLabel = (roleName) => ({
             <div class="adm-legend">
                 <p class="adm-legend__title">Descripción de roles</p>
                 <div class="adm-legend__grid">
-                    <div class="adm-legend__item">
+                    <div v-if="roles.some(r => r.name === 'super_admin')" class="adm-legend__item">
                         <span class="badge badge--navy">Super Admin</span>
                         <p>Acceso total al sistema. Gestiona usuarios, roles y toda la información.</p>
                     </div>

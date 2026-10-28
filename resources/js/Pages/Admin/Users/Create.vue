@@ -107,7 +107,7 @@ const submit = () => form.post(route('admin.users.store'));
  
                 <!-- Descripción de roles -->
                 <div class="uf-roles-info">
-                    <div class="uf-role-card">
+                    <div v-if="roles.some(r => r.name === 'super_admin')" class="uf-role-card">
                         <span class="uf-role-badge uf-role-badge--navy">Super Admin</span>
                         <p>Acceso total. Gestiona usuarios, roles y toda la información del sistema.</p>
                     </div>

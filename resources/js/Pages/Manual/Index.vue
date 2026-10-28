@@ -316,6 +316,7 @@ const secciones = [
                     'Marca o desmarca los permisos y guarda. Cada permiso controla una acción concreta: por ejemplo, "Ver reportes" permite abrir Reportes y "Editar afiliados" permite modificar un afiliado.',
                     'El cambio se aplica de inmediato: la opción desaparece del menú de esos usuarios y, si escriben la dirección a mano, el sistema les niega el acceso.',
                     'El rol Super Admin siempre tiene todos los permisos y no se puede modificar, para que nadie quede fuera del sistema por error.',
+                    'Las cuentas y el rol de Super Admin solo las ve otro Super Admin: un Empleado con permiso de gestionar usuarios no las encuentra en la lista, ni puede elegir ese rol, ni abrirlas o inactivarlas.',
                     'Los cambios que hagas a los roles se conservan: no se pierden cuando se actualiza el sistema.',
                     'Solo el Super Admin puede crear roles, crear permisos o cambiar los permisos de un rol. Otros usuarios con el permiso "Ver roles y permisos" solo pueden consultarlos.',
                 ],

@@ -17,7 +17,10 @@ class RoleController extends Controller
     public function index()
     {
         return Inertia::render('Admin/Roles/Index', [
-            'roles' => Role::with('permissions')->withCount('users')->orderBy('name')->get(),
+            'roles' => Role::with('permissions')->withCount('users')->orderBy('name')
+                // El rol super_admin solo lo ve un super_admin
+                ->when(! auth()->user()->hasRole('super_admin'), fn ($q) => $q->where('name', '!=', 'super_admin'))
+                ->get(),
             'permissions' => Permission::orderBy('name')->get(['id', 'name']),
             'protectedRoles' => self::ROLES_PROTEGIDOS,
         ]);

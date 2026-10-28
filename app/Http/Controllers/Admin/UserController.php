@@ -18,10 +18,16 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $query = User::with('roles')
+            // Quien no es super_admin no ve las cuentas super_admin
+            ->when(! $this->actorIsSuperAdmin(), fn ($q) =>
+                $q->whereDoesntHave('roles', fn ($r) => $r->where('name', 'super_admin'))
+            )
+            // La búsqueda va agrupada: si no, el OR se "come" los demás filtros
             ->when($request->filled('search'), fn ($q) =>
-                $q->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('email', 'like', "%{$request->search}%")
-                  ->orWhere('username', 'like', "%{$request->search}%")
+                $q->where(fn ($s) => $s
+                    ->where('name', 'like', "%{$request->search}%")
+                    ->orWhere('email', 'like', "%{$request->search}%")
+                    ->orWhere('username', 'like', "%{$request->search}%"))
             )
             ->when($request->filled('role'), fn ($q) =>
                 $q->whereHas('roles', fn ($r) => $r->where('name', $request->role))
@@ -33,7 +39,7 @@ class UserController extends Controller
 
         return Inertia::render('Admin/Users/Index', [
             'users'   => $query->paginate(15)->withQueryString(),
-            'roles'   => Role::orderBy('name')->get(['id', 'name']),
+            'roles'   => $this->visibleRoles(),
             'filters' => $request->only(['search', 'role', 'status']),
         ]);
     }
@@ -42,7 +48,7 @@ class UserController extends Controller
     public function create()
     {
         return Inertia::render('Admin/Users/Create', [
-            'roles'      => Role::orderBy('name')->get(['id', 'name']),
+            'roles'      => $this->visibleRoles(),
             'affiliates' => Affiliate::active()
                 ->doesntHave('user')
                 ->orderBy('full_name')
@@ -82,9 +88,11 @@ class UserController extends Controller
     // ── EDIT ──────────────────────────────────────────────────
     public function edit(User $user)
     {
+        $this->hideSuperAdminFromOthers($user);
+
         return Inertia::render('Admin/Users/Edit', [
             'user'       => $user->load('roles'),
-            'roles'      => Role::orderBy('name')->get(['id', 'name']),
+            'roles'      => $this->visibleRoles(),
             'affiliates' => Affiliate::active()
                 ->where(fn ($q) =>
                     $q->doesntHave('user')->orWhereHas('user', fn ($u) => $u->where('id', $user->id))
@@ -97,6 +105,8 @@ class UserController extends Controller
     // ── UPDATE ────────────────────────────────────────────────
     public function update(Request $request, User $user)
     {
+        $this->hideSuperAdminFromOthers($user);
+
         $validated = $request->validate([
             'name'         => 'required|string|max:255',
             'email'        => "required|email|unique:users,email,{$user->id}",
@@ -123,6 +133,29 @@ class UserController extends Controller
         return redirect()
             ->route('admin.users.index')
             ->with('message', "Usuario {$user->name} actualizado.");
+    }
+
+    private function actorIsSuperAdmin(): bool
+    {
+        return Auth::user()->hasRole('super_admin');
+    }
+
+    /**
+     * Roles que se muestran y se pueden elegir: el de super_admin solo lo ve un super_admin.
+     */
+    private function visibleRoles()
+    {
+        return Role::orderBy('name')
+            ->when(! $this->actorIsSuperAdmin(), fn ($q) => $q->where('name', '!=', 'super_admin'))
+            ->get(['id', 'name']);
+    }
+
+    /**
+     * Para quien no es super_admin, una cuenta super_admin "no existe" (404).
+     */
+    private function hideSuperAdminFromOthers(User $user): void
+    {
+        abort_if(! $this->actorIsSuperAdmin() && $user->hasRole('super_admin'), 404);
     }
 
     /**
@@ -152,6 +185,8 @@ class UserController extends Controller
     // Nunca se eliminan — se activan/inactivan
     public function toggleStatus(User $user)
     {
+        $this->hideSuperAdminFromOthers($user);
+
         // No se puede inactivar el propio super admin
         if ($user->id === Auth::id()) {
             return back()->with('error', 'No puedes inactivar tu propia cuenta.');
