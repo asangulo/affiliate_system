@@ -7,14 +7,22 @@ use App\Models\Branch;
 use App\Models\Plan;
 use App\Models\User;
 use App\Services\PortalAccountService;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class PortalAccountTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Roles con sus permisos reales (el portal y el login dependen de ellos)
+        $this->seed(RolesAndPermissionsSeeder::class);
+    }
 
     private function affiliate(string $name, string $cedula, array $extra = []): Affiliate
     {
@@ -61,7 +69,7 @@ class PortalAccountTest extends TestCase
         $this->assertSame('alex.angulo', $service->ensureFor($a)->username);
         $this->assertSame('alex.angulo2', $service->ensureFor($b)->username);
         $this->assertNull($service->ensureFor($a->fresh()), 'Ya tiene cuenta: no se duplica');
-        $this->assertSame(2, User::count());
+        $this->assertSame(2, User::whereNotNull("affiliate_id")->count());
     }
 
     public function test_inactive_affiliates_get_no_account_and_own_email_is_reused(): void
@@ -80,13 +88,13 @@ class PortalAccountTest extends TestCase
         $this->affiliate('Luis Mora', '2');
 
         $this->artisan('portal:create-users', ['--dry-run' => true])->assertSuccessful();
-        $this->assertSame(0, User::count());
+        $this->assertSame(0, User::whereNotNull("affiliate_id")->count());
 
         $this->artisan('portal:create-users')->assertSuccessful();
-        $this->assertSame(2, User::count());
+        $this->assertSame(2, User::whereNotNull("affiliate_id")->count());
 
         $this->artisan('portal:create-users')->assertSuccessful();
-        $this->assertSame(2, User::count());
+        $this->assertSame(2, User::whereNotNull("affiliate_id")->count());
     }
 
     public function test_client_can_log_in_with_username_and_is_sent_to_change_password(): void
@@ -150,7 +158,8 @@ class PortalAccountTest extends TestCase
     public function test_new_holder_after_death_gets_own_account_and_old_one_is_disabled(): void
     {
         $empleado = User::factory()->create();
-        $empleado->assignRole(Role::create(['name' => 'empleado']));
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $empleado->assignRole('empleado');
 
         $aff  = $this->affiliate('Carlos Perez Gil', '1');
         $old  = app(PortalAccountService::class)->ensureFor($aff);

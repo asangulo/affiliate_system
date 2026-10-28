@@ -7,6 +7,7 @@ use App\Models\Beneficiary;
 use App\Models\Branch;
 use App\Models\Plan;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -18,7 +19,10 @@ class AffiliateDeceasedTest extends TestCase
     private function actor(): User
     {
         $user = User::factory()->create();
-        $user->assignRole(Role::create(['name' => 'empleado']));
+        if (! Role::where('name', 'empleado')->exists()) {
+            $this->seed(RolesAndPermissionsSeeder::class);
+        }
+        $user->assignRole('empleado');
 
         return $user;
     }

@@ -310,6 +310,17 @@ const secciones = [
                 ],
             },
             {
+                titulo: 'Cambiar lo que puede hacer un rol (permisos)',
+                pasos: [
+                    'Entra a "Roles y Permisos", busca el rol y haz clic en "Editar" sobre su lista de permisos.',
+                    'Marca o desmarca los permisos y guarda. Cada permiso controla una acción concreta: por ejemplo, "Ver reportes" permite abrir Reportes y "Editar afiliados" permite modificar un afiliado.',
+                    'El cambio se aplica de inmediato: la opción desaparece del menú de esos usuarios y, si escriben la dirección a mano, el sistema les niega el acceso.',
+                    'El rol Super Admin siempre tiene todos los permisos y no se puede modificar, para que nadie quede fuera del sistema por error.',
+                    'Los cambios que hagas a los roles se conservan: no se pierden cuando se actualiza el sistema.',
+                    'Solo el Super Admin puede crear roles, crear permisos o cambiar los permisos de un rol. Otros usuarios con el permiso "Ver roles y permisos" solo pueden consultarlos.',
+                ],
+            },
+            {
                 titulo: 'Desactivar un usuario',
                 pasos: [
                     'Igual que con los afiliados, un usuario no se elimina: se inactiva desde el listado.',

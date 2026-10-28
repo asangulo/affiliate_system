@@ -72,6 +72,15 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Reportes
             'reports.view' => 'Ver reportes',
+
+            // Panel principal
+            'dashboard.view' => 'Ver panel principal',
+
+            // Planes
+            'plans.view'   => 'Ver planes',
+            'plans.create' => 'Crear planes',
+            'plans.edit'   => 'Editar planes',
+            'plans.delete' => 'Eliminar planes',
         ];
 
         foreach ($permissions as $anterior => $nuevo) {
@@ -92,9 +101,15 @@ class RolesAndPermissionsSeeder extends Seeder
         $superAdmin = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
         $superAdmin->syncPermissions(Permission::all());
 
+        // Los permisos de empleado y cliente solo se asignan cuando el rol se crea por primera vez.
+        // Después se administran desde Roles y Permisos y este seeder (que corre en cada despliegue)
+        // no debe pisarlos. Los permisos nuevos de versiones futuras se agregan con una migración.
+
         // EMPLEADO — gestión de afiliados, sin admin de usuarios/roles
         $empleado = Role::firstOrCreate(['name' => 'empleado', 'guard_name' => 'web']);
-        $empleado->syncPermissions([
+        if ($empleado->wasRecentlyCreated) $empleado->syncPermissions([
+            'Ver panel principal',
+            'Activar o inactivar afiliados',
             'Ver afiliados',
             'Crear afiliados',
             'Editar afiliados',
@@ -110,7 +125,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // CLIENTE — solo ve su portal personal
         $cliente = Role::firstOrCreate(['name' => 'cliente', 'guard_name' => 'web']);
-        $cliente->syncPermissions([
+        if ($cliente->wasRecentlyCreated) $cliente->syncPermissions([
             'Ver portal del cliente',
             'Ver mis pagos',
         ]);

@@ -4,7 +4,7 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 const page = usePage();
-const isSuperAdmin = computed(() => page.props.auth?.roles?.includes('super_admin') ?? false);
+const can = (permiso) => (page.props.auth?.permissions ?? []).includes(permiso);
 const user = computed(() => page.props.auth?.user ?? null);
 const hora = new Date().getHours();
 const saludo = hora < 12 ? 'Buenos días' : hora < 18 ? 'Buenas tardes' : 'Buenas noches';
@@ -14,6 +14,7 @@ const accesos = [
         label: 'Ver Afiliados',
         desc: 'Consultar y gestionar el registro',
         route: 'affiliates.index',
+        perm: 'Ver afiliados',
         cls: 'qa--blue',
         icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>`,
     },
@@ -21,6 +22,7 @@ const accesos = [
         label: 'Nuevo Afiliado',
         desc: 'Registrar un nuevo beneficiario',
         route: 'affiliates.create',
+        perm: 'Crear afiliados',
         cls: 'qa--green',
         icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>`,
     },
@@ -28,6 +30,7 @@ const accesos = [
         label: 'Importar Excel',
         desc: 'Carga masiva de afiliados',
         route: 'affiliates.index',
+        perm: 'Importar afiliados',
         cls: 'qa--gold',
         icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>`,
     },
@@ -92,7 +95,7 @@ const accesos = [
             <div class="db-section-label">ACCESOS RÁPIDOS</div>
             <div class="db-quick">
                 <Link
-                    v-for="acc in accesos"
+                    v-for="acc in accesos.filter(a => !a.perm || can(a.perm))"
                     :key="acc.route"
                     :href="route(acc.route)"
                     class="qa"
@@ -107,8 +110,8 @@ const accesos = [
                         <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
                     </svg>
                 </Link>
-                <!-- Solo super_admin -->
-                <Link v-if="isSuperAdmin" :href="route('admin.users.index')" class="qa qa--purple">
+                <!-- Solo con permiso de ver usuarios -->
+                <Link v-if="can('Ver usuarios')":href="route('admin.users.index')" class="qa qa--purple">
                     <svg class="qa__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                     </svg>

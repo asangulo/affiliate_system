@@ -55,6 +55,15 @@ class User extends Authenticatable
      */
     public function homeRouteName(): string
     {
-        return $this->hasAnyRole(['super_admin', 'empleado']) ? 'dashboard' : 'portal.index';
+        if ($this->can('Ver panel principal')) {
+            return 'dashboard';
+        }
+
+        if ($this->can('Ver portal del cliente')) {
+            return 'portal.index';
+        }
+
+        // Un rol sin ninguna de las dos: lo único que siempre puede abrir es su perfil.
+        return 'profile.edit';
     }
 }

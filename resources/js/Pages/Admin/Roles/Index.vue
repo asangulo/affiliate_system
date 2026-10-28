@@ -1,7 +1,10 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { Head, useForm, router, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
+
+// Solo el Super Admin modifica roles y permisos; el resto únicamente los consulta.
+const puedeModificar = usePage().props.auth?.roles?.includes('super_admin') ?? false;
 
 const props = defineProps({
     roles:          Array,
@@ -83,8 +86,8 @@ const destroyRole = (role) => {
 
         <div class="rl">
             <div class="rl-actions">
-                <button class="rl-btn rl-btn--outline" @click="openPermModal">+ Nuevo permiso</button>
-                <button class="rl-btn" @click="openRoleModal">+ Nuevo rol</button>
+                <button v-if="puedeModificar" class="rl-btn rl-btn--outline" @click="openPermModal">+ Nuevo permiso</button>
+                <button v-if="puedeModificar" class="rl-btn" @click="openRoleModal">+ Nuevo rol</button>
             </div>
 
             <div class="rl-grid">
@@ -99,7 +102,7 @@ const destroyRole = (role) => {
                     <div class="rl-card__perms">
                         <div class="rl-card__perms-row">
                             <p class="rl-card__perms-title">Permisos asignados</p>
-                            <button v-if="editingRoleId !== role.id" class="rl-link" @click="startEdit(role)">Editar</button>
+                            <button v-if="puedeModificar && editingRoleId !== role.id && role.name !== 'super_admin'" class="rl-link" @click="startEdit(role)">Editar</button>
                         </div>
 
                         <!-- Vista normal -->

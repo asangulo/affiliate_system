@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { Link, router, useForm } from '@inertiajs/vue3';
+import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { Head } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import debounce from 'lodash/debounce';
@@ -11,6 +11,9 @@ const props = defineProps({
     branches:   Array,
     plans:      Array,
 });
+
+const page = usePage();
+const can  = (permiso) => (page.props.auth?.permissions ?? []).includes(permiso);
 
 const search        = ref(props.filters.search        || '');
 const perPage       = ref(Number(props.filters.per_page || 10));
@@ -186,11 +189,11 @@ const paginationLinks = computed(() => props.affiliates.links || []);
                 </div>
 
                 <div class="af-toolbar__actions">
-                    <button @click="showImport = !showImport" class="af-btn af-btn--import">
+                    <button v-if="can('Importar afiliados')" @click="showImport = !showImport" class="af-btn af-btn--import">
                         <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                         Importar Excel
                     </button>
-                    <Link :href="route('affiliates.create')" class="af-btn af-btn--new">
+                    <Link v-if="can('Crear afiliados')" :href="route('affiliates.create')" class="af-btn af-btn--new">
                         <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
                         Nuevo Afiliado
                     </Link>
@@ -265,16 +268,16 @@ const paginationLinks = computed(() => props.affiliates.links || []);
                                         <button @click="openDetail(aff)" class="af-action af-action--view">
                                             Ver
                                         </button>
-                                        <Link :href="route('affiliates.edit', aff.id)"
+                                        <Link v-if="can('Editar afiliados')" :href="route('affiliates.edit', aff.id)"
                                             class="af-action af-action--edit">
                                             Editar
                                         </Link>
-                                        <button @click="toggleStatus(aff.id)"
+                                        <button v-if="can('Activar o inactivar afiliados')" @click="toggleStatus(aff.id)"
                                             class="af-action"
                                             :class="aff.is_active ? 'af-action--deactivate' : 'af-action--activate'">
                                             {{ aff.is_active ? 'Inactivar' : 'Activar' }}
                                         </button>
-                                        <button v-if="aff.is_active" @click="openDeceased(aff)"
+                                        <button v-if="aff.is_active && can('Editar afiliados')" @click="openDeceased(aff)"
                                             class="af-action af-action--deceased">
                                             Fallecido
                                         </button>
@@ -497,7 +500,7 @@ const paginationLinks = computed(() => props.affiliates.links || []);
                         </div>
                     </div>
                     <div class="af-modal__footer">
-                        <Link :href="route('affiliates.edit', selectedAff?.id)"
+                        <Link v-if="can('Editar afiliados')" :href="route('affiliates.edit', selectedAff?.id)"
                             class="af-btn af-btn--new" @click="closeModal">
                             Editar afiliado
                         </Link>

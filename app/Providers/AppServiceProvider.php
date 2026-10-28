@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
 class AppServiceProvider extends ServiceProvider
@@ -29,5 +30,9 @@ class AppServiceProvider extends ServiceProvider
             ]);
         });
         Vite::prefetch(concurrency: 3);
+
+        // El super_admin siempre puede todo, aunque a su rol le falte un permiso
+        // recién creado: así nadie puede quedarse fuera del sistema por error.
+        Gate::before(fn ($user) => $user->hasRole('super_admin') ? true : null);
     }
 }

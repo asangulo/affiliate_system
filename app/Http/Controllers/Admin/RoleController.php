@@ -45,6 +45,11 @@ class RoleController extends Controller
             'permissions.*' => 'string|exists:permissions,name',
         ]);
 
+        // El super_admin siempre tiene todos los permisos: editarlo solo serviría para dejar a alguien fuera.
+        if ($role->name === 'super_admin') {
+            return back()->with('error', 'El rol Super Admin siempre tiene todos los permisos y no se puede modificar.');
+        }
+
         $role->syncPermissions($validated['permissions'] ?? []);
 
         return back()->with('message', "Permisos de \"{$role->name}\" actualizados.");

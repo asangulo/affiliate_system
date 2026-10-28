@@ -62,6 +62,8 @@ class UserController extends Controller
             'is_active'    => 'boolean',
         ]);
 
+        $this->authorizeRoleChange($validated['role']);
+
         $user = User::create([
             'name'         => $validated['name'],
             'email'        => $validated['email'],
@@ -103,6 +105,8 @@ class UserController extends Controller
             'affiliate_id' => 'nullable|exists:affiliates,id',
         ]);
 
+        $this->authorizeRoleChange($validated['role'], $user);
+
         $data = [
             'name'         => $validated['name'],
             'email'        => $validated['email'],
@@ -119,6 +123,29 @@ class UserController extends Controller
         return redirect()
             ->route('admin.users.index')
             ->with('message', "Usuario {$user->name} actualizado.");
+    }
+
+    /**
+     * Evita que alguien con permiso de crear o editar usuarios se escale privilegios:
+     * solo un super_admin toca cuentas super_admin, y cambiar un rol exige "Asignar roles".
+     */
+    private function authorizeRoleChange(string $role, ?User $target = null): void
+    {
+        $actor = Auth::user();
+
+        if ($actor->hasRole('super_admin')) {
+            return;
+        }
+
+        abort_if(
+            $role === 'super_admin' || $target?->hasRole('super_admin'),
+            403,
+            'Solo un Super Admin puede crear o modificar cuentas de Super Admin.'
+        );
+
+        if (! $target || ! $target->hasRole($role)) {
+            abort_unless($actor->can('Asignar roles'), 403, 'No tienes permiso para asignar roles.');
+        }
     }
 
     // ── TOGGLE STATUS ─────────────────────────────────────────

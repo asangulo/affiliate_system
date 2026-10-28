@@ -6,6 +6,7 @@ use App\Models\Affiliate;
 use App\Models\Branch;
 use App\Models\Plan;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -16,8 +17,12 @@ class PlanTest extends TestCase
 
     private function userWithRole(string $role): User
     {
+        if (! Role::where('name', $role)->exists()) {
+            $this->seed(RolesAndPermissionsSeeder::class);
+        }
+
         $user = User::factory()->create();
-        $user->assignRole(Role::findOrCreate($role, 'web'));
+        $user->assignRole($role);
 
         return $user;
     }
