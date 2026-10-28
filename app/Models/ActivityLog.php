@@ -44,6 +44,7 @@ class ActivityLog extends Model
             'App\Models\Branch'      => 'Sede',
             'App\Models\Plan'        => 'Plan',
             'App\Models\User'        => 'Usuario',
+            'App\Models\HolderChange' => 'Cambio de titular',
         ];
 
         return $map[$this->subject_type] ?? class_basename($this->subject_type ?? '');
@@ -80,12 +81,25 @@ class ActivityLog extends Model
             }
             $out[] = [
                 'field' => self::humanField($campo),
-                'from'  => $valorViejo === null || $valorViejo === '' ? '—' : (string) $valorViejo,
-                'to'    => $valorNuevo === null || $valorNuevo === '' ? '—' : (string) $valorNuevo,
+                'from'  => self::humanValue($campo, $valorViejo),
+                'to'    => self::humanValue($campo, $valorNuevo),
             ];
         }
 
         return $out;
+    }
+
+    private static function humanValue(string $campo, mixed $valor): string
+    {
+        if ($valor === null || $valor === '') {
+            return '—';
+        }
+
+        if ($campo === 'is_active') {
+            return $valor ? 'Sí' : 'No';
+        }
+
+        return (string) $valor;
     }
 
     public static function humanField(string $campo): string
@@ -120,6 +134,19 @@ class ActivityLog extends Model
             'manager_name'     => 'Encargado',
             'code'             => 'Código',
             'name'             => 'Nombre',
+            'affiliate_id'        => 'Afiliado',
+            'reason'              => 'Motivo',
+            'deceased_at'         => 'Fecha de fallecimiento',
+            'notes'               => 'Observaciones',
+            'previous_full_name'  => 'Titular anterior',
+            'previous_id_number'  => 'Cédula del titular anterior',
+            'previous_birth_date' => 'Nacimiento del titular anterior',
+            'previous_phone'      => 'Teléfono del titular anterior',
+            'previous_email'      => 'Correo del titular anterior',
+            'beneficiary_id'      => 'Beneficiario',
+            'new_full_name'       => 'Nuevo titular',
+            'new_id_number'       => 'Cédula del nuevo titular',
+            'performed_by'        => 'Registrado por',
         ];
 
         return $map[$campo] ?? ucfirst(str_replace('_', ' ', $campo));

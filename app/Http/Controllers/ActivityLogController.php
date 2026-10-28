@@ -62,6 +62,7 @@ class ActivityLogController extends Controller
                 'App\Models\Branch'      => 'Sedes',
                 'App\Models\Plan'        => 'Planes',
                 'App\Models\User'        => 'Usuarios',
+                'App\Models\HolderChange' => 'Cambios de titular',
             ],
             'stats'   => [
                 'today' => ActivityLog::whereDate('created_at', Carbon::today())->count(),

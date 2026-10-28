@@ -43,6 +43,6 @@ class HolderChange extends Model
 
     public function activityLabel(): string
     {
-        return 'cambio de titular de ' . $this->previous_full_name;
+        return $this->previous_full_name;
     }
 }

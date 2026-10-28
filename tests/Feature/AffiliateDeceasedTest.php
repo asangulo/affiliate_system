@@ -131,4 +131,18 @@ class AffiliateDeceasedTest extends TestCase
             'fee_amount' => 1, 'is_active' => true,
         ]);
     }
+
+    public function test_activity_log_entries_are_written_in_spanish(): void
+    {
+        $aff = $this->affiliate();
+
+        $this->actingAs($this->actor())
+            ->post(route('affiliates.deceased', $aff), ['deceased_at' => now()->toDateString()]);
+
+        $log = \App\Models\ActivityLog::where('subject_type', \App\Models\HolderChange::class)->firstOrFail();
+
+        $this->assertSame('Creó el cambio de titular de Titular Uno', $log->description);
+        $this->assertSame('Cambio de titular', $log->subject_name);
+        $this->assertSame('Fecha de fallecimiento', \App\Models\ActivityLog::humanField('deceased_at'));
+    }
 }

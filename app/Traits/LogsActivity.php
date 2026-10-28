@@ -80,6 +80,7 @@ trait LogsActivity
             'App\Models\Branch'      => 'la sede',
             'App\Models\Plan'        => 'el plan',
             'App\Models\User'        => 'el usuario',
+            'App\Models\HolderChange' => 'el cambio de titular de',
             default                  => strtolower(class_basename(static::class)),
         };
 
